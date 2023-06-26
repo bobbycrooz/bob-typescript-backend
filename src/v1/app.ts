@@ -33,10 +33,10 @@ const initMiddlewares = () => {
 // routes
 const initRoutes = () => {
   app.use('/v1', apiRoutes)
-  app.all('/', (req, res) => {
+  app.all('/', (req:any, res:any) => {
     clientResponse(res, 200, 'welcome to the xyz backend server <3')
   })
-  app.all('**', (req, res) => clientResponse(res, 401, 'Route not found, try check your browser url'))
+  app.all('**', (req:any, res:any) => clientResponse(res, 401, 'Route not found, try check your browser url'))
 
   Logger.info('Routers initialized <3')
 }

@@ -14,6 +14,7 @@ router.post('/register', registerOne)
 router.post('/login', logIn)
 
 router.get('/send-otp', sendOtp)
+
 router.post('/verify-otp', verifyOtp)
 
 export default {
