@@ -8,10 +8,12 @@
     "build": "npm run clean && tsc",
     "clean": "rimraf ./dist ./logs",
     "start:clean": " npm run build && node ./dist/index.js",
-    "start": " node ./dist/index.js",
+    "start": " node dist/index.js",
     "dev": " nodemon index.ts",
     "lint": "eslint src/**/*.ts",
-    "format": "eslint src/**/*.ts --fix"
+    "format": "eslint src/**/*.ts --fix",
+      "build:dev": "rimraf ./dist && cross-env NODE_ENV=production tsc"
+
   },
   "keywords": [
     "['backend'",
