@@ -23,4 +23,6 @@ glob
     else router.use(fileRoutes.default.baseUrl, fileRoutes.default.router)
   })
 
+  console.log(router)
+
 export default router
