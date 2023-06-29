@@ -1,11 +1,6 @@
-import { Request, Response } from 'express'
-import config from '../config'
-import jwt from 'jsonwebtoken'
 
 
-
-
-// response helper
+// response handler
 export const clientResponse = (res: any, status: number, message: string | object) =>
 {
  
@@ -29,7 +24,3 @@ export const clientResponse = (res: any, status: number, message: string | objec
     .end()
 }
 
-// assign token helper
-export const asignNewToken = (data: string | object) => {
-  return jwt.sign(data, config.SECRET || '', typeof data === 'object' ? { expiresIn: '1h' } : {} )
-}

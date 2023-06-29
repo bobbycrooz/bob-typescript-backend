@@ -1,7 +1,9 @@
 import User from '../models/user'
 import Otp from '../models/otp'
 import Services from '../services/model.service'
-import { asignNewToken, clientResponse } from '../helpers'
+import {  clientResponse } from '../helpers/response'
+import { asignNewToken } from '../helpers/token'
+
 import { validateAndFormat } from '../utils'
 import Logger from '../iibs/logger'
 import client from 'twilio'

@@ -2,7 +2,7 @@
 
 import { glob } from 'glob'
 import express from 'express'
-import authenticate from '../middlewares/Guard'
+import protect from '../middlewares/Guard'
 
 // const authMiddleWare = require('../app/middlewares')
 
@@ -16,8 +16,8 @@ glob
     //
     const fileRoutes = await import(`./${file}`)
 
-    if (fileRoutes.auth) router.use(fileRoutes.default.baseUrl, authenticate, fileRoutes.default.router)
-    else router.use(fileRoutes.default.baseUrl, authenticate, fileRoutes.default.router)
+    if (fileRoutes.default.auth) router.use(fileRoutes.default.baseUrl, protect, fileRoutes.default.router)
+    else router.use(fileRoutes.default.baseUrl, fileRoutes.default.router)
   })
 
 export default router

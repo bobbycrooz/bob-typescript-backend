@@ -27,7 +27,7 @@ class Services {
 
   async getOne(data: object) {
     try {
-      return this.model.findOne(data)
+      return this.model.findOne(data).lean()
     } catch (error: any) {
       throw new Error(`Error getting data from ${this.model} by id:${data}, ${error.message}`)
     }

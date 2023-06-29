@@ -7,7 +7,7 @@ import apiRoutes from './routes'
 import bodyParser from 'body-parser'
 import config from './config'
 import DB from './helpers/database'
-import { clientResponse } from './helpers'
+import { clientResponse } from './helpers/response'
 const app = express()
 
 app.disable('x-powered-by')
