@@ -19,6 +19,6 @@ router.post('/verify-otp', verifyOtp)
 
 export default {
   baseUrl: '/auth',
-  router
-  // auth: true
+  router,
+  auth: false
 }

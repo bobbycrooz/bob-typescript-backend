@@ -3,26 +3,14 @@
 import { glob } from 'glob'
 import express from 'express'
 import protect from '../middlewares/Guard'
+import authRoute from './auth'
+import patientRoute from './patient'
+import path from 'path'
 
-// const authMiddleWare = require('../app/middlewares')
+const router = express.Router()
 
-console.log('router her ---------------------');
+router.use(authRoute.baseUrl, authRoute.router)
+router.use(patientRoute.baseUrl, protect, patientRoute.router)
 
-
-const router = express.Router() 
-glob
-  .sync('*ts', {
-    cwd: __dirname,
-    ignore: 'index.ts'
-  })
-  .forEach(async (file: any) => {
-    //
-    const fileRoutes = await import(`./${file}`)
-
-    if (fileRoutes.default.auth) router.use(fileRoutes.default.baseUrl, protect, fileRoutes.default.router)
-    else router.use(fileRoutes.default.baseUrl, fileRoutes.default.router)
-  })
-
-  console.log(router)
 
 export default router
