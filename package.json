@@ -8,7 +8,7 @@
     "build": "npm run clean && tsc",
     "clean": "rimraf ./dist ./logs",
     "start:clean": " npm run build && node ./dist/index.js",
-    "start:prod": " node ./dist/index.js",
+    "start": " node ./dist/index.js",
     "dev": " nodemon index.ts",
     "lint": "eslint src/**/*.ts",
     "format": "eslint src/**/*.ts --fix"

@@ -6,6 +6,9 @@ import protect from '../middlewares/Guard'
 
 // const authMiddleWare = require('../app/middlewares')
 
+console.log('router her ---------------------');
+
+
 const router = express.Router() 
 glob
   .sync('*ts', {
