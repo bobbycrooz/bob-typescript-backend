@@ -94,28 +94,34 @@ const logIn = async (req: any, res: any) => {
 
 // reset password 
 const resetPassword = async (req: any, res: any) => {
-  const { phone, password } = req.body
+  const { phone, newPassword } = req.body
 
   try {
-    if (!phone || !password) throw new Error('phone and password are required')
+    if (!phone || !newPassword) throw new Error('new password is required')
     // @ts-ignore
     const isExisting = await User.checkExistingUser(validateAndFormat(phone))
 
     if (!isExisting) return clientResponse(res, 401, 'you need to register first you dont exist')
 
     // const user = await userService.getOne({ phone })
-    const user = await User.findOne({ phone: validateAndFormat(phone) })
+    const updatedPassword = await User.findOneAndUpdate(
+      { phone: validateAndFormat(phone) },
+      { password: newPassword }
+    ).lean()
 
     // const memberPassword = await User.findOne({ phone: validateAndFormat(phone) }).select({ password: 1, _id: 0 })
 
-    // @ts-ignore
-    const match = await user.comparePassword(password) 
+    if (updatedPassword)
+    {
+      const token = asignNewToken(phone)
 
-    if (!match) return clientResponse(res, 401, 'incorrect password')
+      
+      return clientResponse(res, 201, { token: token, message: "password has been updated successfully" })
+      
+    }
 
-    const token = asignNewToken(phone)
 
-    clientResponse(res, 201, { token: token, member: user })
+
   } catch (error: any) {
     Logger.error('${error.message}')
 

@@ -34,7 +34,7 @@ const initMiddlewares = () => {
 const initRoutes = () => {
   app.use('/v1', apiRoutes)
   app.all('/', (req:any, res:any) => {
-    clientResponse(res, 200, 'welcome to the xyz backend server <3')
+    clientResponse(res, 200, 'welcome to the DokRx 💊 backend server')
   })
   app.all('**', (req:any, res:any) => clientResponse(res, 401, 'Route not found, try check your browser url'))
 

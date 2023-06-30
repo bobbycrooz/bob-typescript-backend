@@ -33,6 +33,7 @@ const sendOtp = async (req: any, res: any) => {
 
     // const otp = Math.floor(1000 + Math.random() * 9000)
     var clientOtp = otpG.generate(6, { upperCaseAlphabets: false, specialChars: false })
+
     const otpId = uuidv4()
 
     // store otp code
@@ -77,7 +78,7 @@ const sendOtp = async (req: any, res: any) => {
 const verifyOtp = async (req: any, res: any) => {
   try {
     // get user from request
-    const { otpCode, otpId } = req.body
+    const { otpCode, otpId, isReseting } = req.body
 
     if (!otpCode || !otpId) throw new Error('No otp  code provided')
 
@@ -86,7 +87,12 @@ const verifyOtp = async (req: any, res: any) => {
     if (!savedOtp) throw new Error('otp was not sent to this phone')
 
     // compare
-    if (savedOtp.otp !== otpCode) clientResponse(res, 403, 'invalid otp code')
+    if (savedOtp.otp !== otpCode) return clientResponse(res, 403, 'invalid otp code')
+
+    if (isReseting)
+    {
+      return clientResponse(res, 200, 'phone number has been verified succesfully')
+    }
 
     const verifyUser = await User.findOneAndUpdate(
       { phone: savedOtp.phone },
