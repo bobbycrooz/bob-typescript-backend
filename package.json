@@ -3,14 +3,14 @@
   "version": "1.0.0",
   "description": "'backend server templates for bootsrapping backend projects\"",
   "main": "index.js",
- 
   "scripts": {
     "test": "npm run test",
     "build": "npm run clean && tsc",
     "clean": "rimraf ./dist ./logs",
     "start:clean": " npm run build && node ./dist/index.js",
     "start": " node dist/index.js",
-    "dev": " nodemon index.ts",
+    "dev": "cross-env NODE_ENV=development nodemon index.ts",
+    "dev:neat": "cross-env NODE_ENV=development ts-node-dev --respawn --files --exit-child src/index.ts",
     "lint": "eslint src/**/*.ts",
     "format": "eslint src/**/*.ts --fix",
     "build:dev": "rimraf ./dist && cross-env NODE_ENV=production tsc"
@@ -40,6 +40,7 @@
     "africastalking": "^0.6.2",
     "body-parser": "^1.20.2",
     "cors": "^2.8.5",
+    "cross-env": "^7.0.3",
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
     "glob": "^10.3.0",

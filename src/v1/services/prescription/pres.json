@@ -1,0 +1,22 @@
+{
+  "contact": {
+    "name": "boby",
+    "phone": "09077726791",
+    "dob": "10-03-1997",
+    "adderess": "lasu epe campus"
+  },
+
+  "allergies": ["maleria", "coughs"],
+  "medicalHistory": ["typhoid", "tubaculosis"],
+  "currentMedication": ["paracetamol", "colorado"],
+  "complaints": "lorem this is what happend to me when i was ill in the hospital and ther was no one to come tomyresuce",
+  "medicationImage": "",
+  "phamacyInfo": {
+    "phamacyId": "adkjfljdsjalm;fjoijfoajkdfjoijd"
+  },
+  "deliveryMethod": ["Pharmacy Pickup"],
+  "deliveryDetails": {
+    "address": "",
+    "phone": "09077726791"
+  }
+}

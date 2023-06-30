@@ -8,28 +8,34 @@ import { prescriptionDataSchema } from '../../utils/validation/prescriptionValid
 const userService = new Services(User)
 const prescriptionService = new Services(PrescriptionModel)
 
-const createPrescription = async (req: any, res: any) => {
+const createPrescription = async (req: any, res: any) =>
+{
+  
+
+  console.log('we got here ooo')
   try {
     // get user from request
     const currentUser = req.user
     // get prescription details 
     const prescriptionData = req.body
 
+    console.log(prescriptionData)
+
     //   validate prescription details
     const value = await prescriptionDataSchema.validateAsync(prescriptionData)
 
-    if (value) console.log(value)
+     console.log(value)
 
     // create new prescription
     await prescriptionService.create(prescriptionData)
 
     clientResponse(res, 201, {
-      message: `prescription  created successfully for user: ${prescriptionData.name}`
+      message: `prescription  created successfully for user: ${prescriptionData.contact.name}`
     })
 
     // return response
   } catch (error: typeof Error | any) {
-    Logger.error(`${error.message}`)
+    Logger.error(`${error.message} from this message box`)
 
     // return error
     clientResponse(res, 400, error.message)
@@ -41,19 +47,31 @@ const getPrescriptions = async (req: any, res: any) => {
     // get user from request
     const { name, phone } = req.query
 
-    const filterBy: {
-      name?: string
-      phone?: string
-    } = {}
+    console.log(name, phone, "details froom qurery")
 
-    if (name) {
-      filterBy.name = name
+    let filterBy = {
+     
     }
 
-    if (phone) {
-      filterBy.phone = phone
+
+    if (name)
+    {
+      // @ts-ignore
+      filterBy = {
+        "contact.name": name
+      }
     }
 
+    
+    if (phone)
+    {
+      
+      filterBy = {
+        'contact.phone': phone
+      }
+    }
+    
+    console.log(filterBy)
     // create new prescription
     const allprescriptionData = await prescriptionService.getByQuery(filterBy)
 

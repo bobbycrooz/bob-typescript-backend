@@ -17,12 +17,12 @@ export const getUserFromToken = async (token: string) =>
     if (err)
       return {
         err: err.message,
-        user: null
+        phone: null
       }
 
     return {
       err: null,
-      user: decode
+      phone: decode
     }
   })
 }

@@ -18,7 +18,7 @@ const pattern = (config.NODE_ENV === 'production' ? '**/*.routes.js': '**/*.rout
 const ignoreFile = (config.NODE_ENV === 'production' ? 'index.js' : 'index.ts')
 const cwdPath = (config.NODE_ENV === 'production' ? prodFilePath : devFilePath)
 
-console.log(pattern, ignoreFile)
+console.log(config.NODE_ENV)
 
 
 glob
