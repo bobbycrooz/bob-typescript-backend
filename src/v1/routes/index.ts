@@ -3,14 +3,43 @@
 import { glob } from 'glob'
 import express from 'express'
 import protect from '../middlewares/Guard'
-import authRoute from './auth'
-import patientRoute from './patient'
+// import authRoute from '../services/auth/auth.routes'
 import path from 'path'
+import config from '../config'
 
 const router = express.Router()
 
-router.use(authRoute.baseUrl, authRoute.router)
-router.use(patientRoute.baseUrl, protect, patientRoute.router)
+
+const devFilePath = `${process.cwd()}/src/v1/services`
+const prodFilePath = `${process.cwd()}/dist/src/v1/services`
+
+
+const pattern = (config.NODE_ENV === 'production' ? '**/*.routes.js': '**/*.routes.ts') 
+const ignoreFile = (config.NODE_ENV === 'production' ? 'index.js' : 'index.ts')
+const cwdPath = (config.NODE_ENV === 'production' ? prodFilePath : devFilePath)
+
+console.log(pattern, ignoreFile)
+
+
+glob
+  .sync(pattern, {
+    cwd: cwdPath,
+    ignore: ignoreFile
+  })
+  .forEach(async (file) => {
+    
+    const filePath = path.join(cwdPath, file)
+
+    const fileRoutes = await import(filePath)
+
+
+    if (fileRoutes.default.auth) {
+      router.use(fileRoutes.default.baseUrl, protect, fileRoutes.default.router)
+    } else {
+      router.use(fileRoutes.default.baseUrl, fileRoutes.default.router)
+    }
+
+  })
 
 
 export default router

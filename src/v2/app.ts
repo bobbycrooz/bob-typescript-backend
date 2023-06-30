@@ -74,8 +74,6 @@ export default {
 
     const dbConnected = await initDataBaseConnection()
 
-    console.log(dbConnected, "returned from db connection")
-
     if (dbConnected)
     {
       initMiddlewares()
@@ -87,11 +85,7 @@ export default {
       initProcessHandler()
     }
   
-  }, 
-
-  stop: () =>
-  {
-      Logger.info('exiting applicaton  🤬🤬')
-    process.exit(1)
   }
+
+  // stop: () => {}
 }

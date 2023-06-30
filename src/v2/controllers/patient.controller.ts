@@ -1,5 +1,5 @@
-import User from '../services/user/user.model'
-import Services from '../helpers/model.helper'
+import User from '../models/user'
+import Services from '../services/model.service'
 import {  clientResponse } from '../helpers/response'
 // import { asignNewToken } from '../helpers/token'
 import { validateAndFormat } from '../utils'
