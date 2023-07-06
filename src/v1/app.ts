@@ -1,6 +1,8 @@
 import express, { NextFunction, Request, Response } from 'express'
 import Logger from './iibs/logger'
 import cors from 'cors'
+import helmet from 'helmet'
+import rateLimiter from 'express-rate-limit'
 import morganMiddleware from './middlewares/morgan'
 import { ErrorCode, ErrorException, errorHandler } from './utils'
 import apiRoutes from './routes'
@@ -10,11 +12,29 @@ import DB from './helpers/database'
 import { clientResponse } from './helpers/response'
 const app = express()
 
+
+
 app.disable('x-powered-by')
 
 // Middlewares
 const initMiddlewares = () => {
   app.use(cors())
+  app.use(helmet())
+  app.use(
+    cors({
+      origin: '*',
+      methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+      preflightContinue: false,
+      optionsSuccessStatus: 204,
+      credentials: true
+    })
+  )
+  // app.use(xss())
+  app.use(
+  rateLimiter({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 500, // limit each IP to 100 requests per windowMs
+  }))
   app.use(bodyParser.urlencoded({ extended: false }))
   app.use(bodyParser.json())
   app.use(express.json())
@@ -74,7 +94,7 @@ export default {
 
     const dbConnected = await initDataBaseConnection()
 
-    console.log(dbConnected, "returned from db connection")
+    // console.log(dbConnected, "returned from db connection")
 
     if (dbConnected)
     {

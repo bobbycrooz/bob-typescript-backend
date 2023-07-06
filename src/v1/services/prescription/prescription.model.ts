@@ -11,10 +11,12 @@ const PrescriptionSchema = new mongoose.Schema({
     dob: String,
     address: String
   },
+
   allergies: {
     type: [String],
     required: true
   },
+
   medicalHistory: {
     type: [String],
     required: true
@@ -25,16 +27,25 @@ const PrescriptionSchema = new mongoose.Schema({
     required: true
   },
 
+  medications: [
+    {
+      name: String,
+
+      quantity: String
+    }
+  ],
   complaints: {
     type: String,
     required: true
   },
+
   medicationImage: {
     type: String
   },
+
   phamacyInfo: {
     phamacyId: {
-     type: mongoose.Schema.Types.ObjectId,
+      type: mongoose.Schema.Types.ObjectId,
       ref: 'Phamacy'
     }
   },
@@ -42,13 +53,53 @@ const PrescriptionSchema = new mongoose.Schema({
   deliveryMethod: {
     type: String,
     enum: ['Pharmacy Pickup', 'Home Delivery'],
-    default: ['Pharmacy Pickup'],
+    default: 'Pharmacy Pickup',
     required: true
+  },
+
+  status: {
+    type: String,
+    enum: ['approved', 'rejected', 'pending'],
+    default: 'pending',
+    required: true
+  },
+
+  approvedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
+
+  rejectedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
   },
 
   deliveryDetails: {
     address: String,
-    phone: String
+    phone: String,
+    stauts: {
+      type: String,
+      enum: ['pending', 'delivered', 'cancelled', 'packaged'],
+      default: 'pending'
+    }
+  },
+
+  prescribedTo: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
+
+  prescribedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
+
+  underReview: {
+    value: Boolean,
+    by: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    }
   }
 })
 

@@ -1,18 +1,16 @@
 import { Router } from 'express'
-
-
-
+import { profile, updateProfile, getProfileById } from './user.controller'
 
 const router = Router()
 
-router.get('/profile', (req, res, next) =>
-{
-      console.log('good job');
-      
-})
+router.get('/', profile)
+
+router.patch('/', updateProfile)
+
+router.get('/:id', getProfileById)
 
 export default {
-  baseUrl: '/patient',
+  baseUrl: '/profile',
   router,
   auth: true
 }

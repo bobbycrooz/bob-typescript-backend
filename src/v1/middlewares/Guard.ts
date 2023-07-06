@@ -20,7 +20,6 @@ async function authorize(req: Request, res: Response, next: NextFunction) {
 
     const { err, phone } = await getUserFromToken(token)
     
-    console.log(phone, 'this is the user from protect')
     
 
        Logger.info('authorization middleware is working')
@@ -37,7 +36,7 @@ async function authorize(req: Request, res: Response, next: NextFunction) {
     next()
   } catch (error) {
     // next(new ErrorException(ErrorCode.Unauthenticated))
-      Logger.error(`${error.message}`)
+      Logger.error(`${error.message} from authorize middleware`)
 
       clientResponse(res, 400, { error: error.message, message: 'there was a problem signing you in' })
   }

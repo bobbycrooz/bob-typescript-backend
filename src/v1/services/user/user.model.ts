@@ -23,13 +23,111 @@ const userSchema = new mongoose.Schema({
   role: {
     type: String,
     required: true,
-    enum: ['patient', 'doctor', 'pharmacist'],
+    enum: ['patient', 'doctor', 'pharmacist']
   },
 
   verified: {
     type: Boolean,
     default: false
   },
+
+  profile: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Profile'
+  }
+})
+
+// patient profile schema
+const practitionerProfileSchema = new mongoose.Schema({
+  personalInfo: {
+    firstName: {
+      type: String,
+      // required: true,
+      set: (value: string) => value.toLowerCase()
+    },
+
+    lastName: {
+      type: String,
+      // required: true,
+      set: (value: string) => value.toLowerCase()
+    },
+
+    email: {
+      type: String
+    },
+
+    languages: {
+      type: [String],
+      default: ['english']
+    }
+  },
+
+  medicalInfo: {
+    specialty: {
+      type: String
+      // required: true,
+    },
+
+    subSpecialty: {
+      type: String
+      // required: true,
+    },
+
+    licenseNumber: {
+      type: String
+      // required: true,
+    },
+
+    hospitalName: {
+      type: String
+    }
+  },
+
+  subscriptionPlan: {
+    type: String,
+    enum: ['free', 'basic', 'premium'],
+    default: 'free'
+  }
+})
+
+const patientProfileSchema = new mongoose.Schema({
+  personalInfo: {
+    firstName: {
+      type: String,
+      // required: true,
+      set: (value: string) => value.toLowerCase()
+    },
+
+    lastName: {
+      type: String,
+      // required: true,
+      set: (value: string) => value.toLowerCase()
+    },
+
+    email: {
+      type: String
+    },
+
+    genotype: String,
+    bloodGroup: String,
+    age: Number,
+    wieight: Number,
+    height: Number,
+    allergies: [String]
+  },
+
+  location: {
+    country: String,
+    state: String,
+    street: String,
+    houseNumber: String
+  },
+
+  subscriptionPlan: {
+    type: String,
+    enum: ['free', 'basic', 'premium'],
+    default: 'free'
+  }
 })
 
 // model function static
@@ -57,6 +155,8 @@ userSchema.methods.comparePassword = async function (commingPassword: string) {
   })
 }
 
-// module.exports = mongoose.model('User', userSchema)
+export const patientProfile = mongoose.model('PatientProfile', patientProfileSchema)
+
+export const practitionerProfile = mongoose.model('PractitionerProfile', practitionerProfileSchema)
+
 export default mongoose.model('User', userSchema)
-// export const User = mongoose.model('User', userSchema)
