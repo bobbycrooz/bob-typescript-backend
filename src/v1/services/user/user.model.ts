@@ -7,10 +7,12 @@ const userSchema = new mongoose.Schema({
     // required: true,
     set: (value: string) => value.toLowerCase()
   },
+
   phone: {
     type: String,
     required: true
   },
+
   password: {
     type: String,
     // required: true,
@@ -31,10 +33,7 @@ const userSchema = new mongoose.Schema({
     default: false
   },
 
-  profile: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Profile'
-  }
+  profileId: String
 })
 
 // patient profile schema
