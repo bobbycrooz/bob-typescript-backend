@@ -63,12 +63,14 @@ const practitionerProfileSchema = new mongoose.Schema({
 
   medicalInfo: {
     specialty: {
-      type: String
+      type: String,
+      set: (value: string) => value.toLowerCase()
       // required: true,
     },
 
     subSpecialty: {
-      type: String
+      type: String,
+      set: (value: string) => value.toLowerCase()
       // required: true,
     },
 
@@ -86,6 +88,14 @@ const practitionerProfileSchema = new mongoose.Schema({
     type: String,
     enum: ['free', 'basic', 'premium'],
     default: 'free'
+  },
+  consultationFee: {
+    type: Number,
+    default: 1500
+  },
+  noofAppointments: {
+    type: Number,
+    default: 0
   }
 })
 
@@ -153,6 +163,13 @@ userSchema.methods.comparePassword = async function (commingPassword: string) {
     })
   })
 }
+
+//method to remove password from json response
+userSchema.methods.toJSON = function() {
+  var obj = this.toObject();
+  delete obj.password;
+  return obj;
+ }
 
 export const patientProfile = mongoose.model('PatientProfile', patientProfileSchema)
 
