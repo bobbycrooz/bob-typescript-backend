@@ -44,7 +44,8 @@ const AppointmentSchema = new mongoose.Schema({
     },
     rating: {
       type: Number,
-      default: 0
+      default: 1,
+      max: 5
     },
     status:{
       type: String,

@@ -93,10 +93,15 @@ const practitionerProfileSchema = new mongoose.Schema({
     type: Number,
     default: 1500
   },
-  noofAppointments: {
+  rating: {
     type: Number,
-    default: 0
-  }
+    default: 0,
+    max: 5
+  },
+  noOfAppointments: {
+    type: Number,
+    default: 0,
+  },
 })
 
 const patientProfileSchema = new mongoose.Schema({

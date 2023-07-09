@@ -7,7 +7,7 @@ import {
 
 import express, { NextFunction, Request, Response } from 'express'
 import { ErrorCode, ErrorException } from '../../utils/'
-import { getAllGeneralPractitioners, getSpecialists, getDoctorProfile,createAppointment, getAllUserAppointments, respondToAppointment } from './appointment.controller'
+import { getAllGeneralPractitioners, getSpecialists, getDoctorProfile,createAppointment, getAllUserAppointments, respondToAppointment, rateAppointment } from './appointment.controller'
 
 const router = Router();
 
@@ -18,8 +18,7 @@ router.get('/doctor/:id', getDoctorProfile);
 router.post('/', createAppointment);
 router.get('/', getAllUserAppointments);
 router.patch('/:id', respondToAppointment);
-// router.get('/', getPrescriptions)
-// router.get('/:id', getPrescriptionById)
+router.patch('/rate/:id', rateAppointment);
 
 export default {
   baseUrl: '/appointment',

@@ -30,7 +30,6 @@ const getSpecialists = async (req:any, res:any) => {
     const { specialty } = req.body;
 
     try {
-        // const allSpecialists = await practitionerProfile.find({medicalInfo:{specialty:specialty}});
 
         const allSpecialists = await practitionerProfile.find({'medicalInfo.specialty': specialty });
 
@@ -53,7 +52,7 @@ const getDoctorProfile = async( req:any, res: any) => {
         const doctor = await practitionerProfile.findOne({_id:id});
 
         if (doctor) {
-            clientResponse(res,200, {
+            return clientResponse(res,200, {
                 doctor: doctor
             })
         }
@@ -90,18 +89,36 @@ const createAppointment =async (req:any, res:any) => {
 
          const meetingLink = generateMeetingLink();
 
-         const appointment = await appointmentService.create({
+
+         const appointment = new AppointmentModel({
             ...appointmentData,
             patientId: appointmentData.patientId || currentUser.id,
             meetingLink: meetingLink
-            
-         });
+          });
+
+         const result =  await appointment.save();
+
+
+         const doctorId = result.doctorId;
+
+         console.log(`docotr: ${doctorId}`);
+         
+
 
          if (appointment) {
+
+           const doctor =  await User.findOne({_id: doctorId});
+           if (doctor) {
+            const doctorProfile = await practitionerProfile.findByIdAndUpdate(doctor.profileId,{ $inc: { noOfAppointments: 1 } });
+
+            await doctorProfile?.save();
             clientResponse(res, 201, {
-                appointment:appointment
+                appointment:appointment,
+                doctor: doctorProfile
             }
             )
+           }
+
          }
          
     
@@ -124,11 +141,14 @@ const getAllUserAppointments = async(req:any, res:any) => {
                   doctorId: currentUser._id
                 }
             ]
-        }).populate('patientId').select('-password');
-
-
-        
-
+        })    
+        .populate({
+            path: "patientId",
+            populate: {
+                path: 'profileId',
+                model: 'PatientProfile'
+            }
+        })
         clientResponse(res,200, {
             appointment:appointment
         })
@@ -140,7 +160,7 @@ const getAllUserAppointments = async(req:any, res:any) => {
       }
 }
 
-const respondToAppointment =async (req:any, res:any) => {
+const respondToAppointment = async (req:any, res:any) => {
     const currentUser = req.user;
     const appointmentId = req.params.id;
     const { status, reason } = req.body;
@@ -183,9 +203,75 @@ const respondToAppointment =async (req:any, res:any) => {
       }
 }
 
+const rateAppointment = async (req:any, res:any) => {
+    const currentUser = req.user;
+    const appointmentId = req.params.id;
+    const { review , rating} = req.body;
+
+    try {
+        const appointment = await AppointmentModel.findByIdAndUpdate(appointmentId);
+
+        if (appointment) {
+            console.log(`${currentUser._id} -- ${appointment.patientId} `);
+            if (appointment.patientId.toString() != currentUser._id.toString()) {
+                clientResponse(res,404, "Patient Id does not match patient on appointment.")
+            }else{
+                appointment.review = review;
+                appointment.rating = rating;
+
+               const results =  await appointment.save();
+
+               const doctor = await practitionerProfile.findOneAndUpdate(appointment.doctorId);
+
+               if (doctor) {
+
+                const updatedRating =
+                (doctor.rating * 6 + rating) / (6 + 1);
+
+                console.log(updatedRating);
+                console.log(doctor.noOfAppointments);
+      
+      
+
+
+                doctor.rating = updatedRating;
+
+                await doctor.save()
+
+                clientResponse(res,201, {
+                    results:results, 
+                    doctor: doctor,
+                    appointment: doctor.noOfAppointments
+                   })
+               }
+
+            
+           
+
+
+               
+
+            }
+
+        }else{
+            clientResponse(res,201, {
+                message: "invalid appointment Id"
+            })
+        }
+
+        
+
+    } catch (error: typeof Error | any) {
+        Logger.error(`${error.message}`)
+    
+        // return error
+        clientResponse(res, 400, error.message)
+      }
+}
 
 
 
 
 
-export { getAllGeneralPractitioners, getSpecialists, getDoctorProfile, createAppointment, getAllUserAppointments, respondToAppointment}
+
+export { getAllGeneralPractitioners, getSpecialists, getDoctorProfile, createAppointment, getAllUserAppointments, respondToAppointment, rateAppointment}
