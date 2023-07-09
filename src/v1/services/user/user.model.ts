@@ -1,5 +1,5 @@
 import bcrypt from 'bcrypt'
-import mongoose from 'mongoose'
+import mongoose, { Schema } from 'mongoose'
 
 const userSchema = new mongoose.Schema({
   username: {
@@ -65,18 +65,15 @@ const practitionerProfileSchema = new mongoose.Schema({
     specialty: {
       type: String,
       set: (value: string) => value.toLowerCase()
-      // required: true,
     },
 
     subSpecialty: {
       type: String,
       set: (value: string) => value.toLowerCase()
-      // required: true,
     },
 
     licenseNumber: {
       type: String
-      // required: true,
     },
 
     hospitalName: {
@@ -93,6 +90,13 @@ const practitionerProfileSchema = new mongoose.Schema({
     type: Number,
     default: 1500
   },
+  reviews: [
+    {
+      review: { type: String, required: true },
+      rating: { type: Number, required: true },
+      reviewFrom: { type: Schema.Types.ObjectId, required: true}
+    }
+  ],
   rating: {
     type: Number,
     default: 0,

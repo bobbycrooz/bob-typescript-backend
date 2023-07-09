@@ -179,25 +179,63 @@ const respondToAppointment = async (req:any, res:any) => {
                 }else{
                     appointment.status = status;
                 }
-               
-            }
 
+                await appointment.save()
+                    clientResponse(res,202, {
+                    appointment:appointment
+                    })
+               }
             else{
                 clientResponse(res,400, {
                     message: "Appointment response cannot be modified after it is settled.",
                     appointmentStatus: appointment.status
                 })
-            }
-
-            
-            await appointment.save()
-           clientResponse(res,202, {
-          appointment:appointment
-           })
+            }          
         }
     } catch (error: typeof Error | any) {
         Logger.error(`${error.message}`)
     
+        // return error
+        clientResponse(res, 400, error.message)
+      }
+}
+
+const rescheduleAppointment =async (req:any, res:any) => {
+    const currentUser = req.user;
+    const appointmentId = req.params.id;
+    const { appointmentDate } = req.body;
+
+    try {
+        const isPatient:Boolean = currentUser.role === 'patient';
+        if (!isPatient) {
+            clientResponse(res,400, {
+                message: "Only Patients can reschedule appointments."
+            })
+        }else{
+           const appointment = await AppointmentModel.findByIdAndUpdate(appointmentId);
+           if (currentUser._id.toString() != appointment?.patientId.toString()) {
+            clientResponse(res,404, "Patient Id does not match patient on appointment.")
+           }else {
+            if (appointment?.status == "PENDING" || appointment?.status == "APPROVED") {
+                appointment.appointmentDate = appointmentDate;
+                const reschedule = await appointment.save();
+                clientResponse(res,202, {
+                    message: "Appointment Rescheduled successfully!",
+                    rescheduleDate: reschedule.appointmentDate
+                })
+               }
+               else{
+                clientResponse(res,400, {
+                    message: "Appointment cannot be rescheduled after it is completed.",
+                    appointmentStatus: appointment?.status
+                })
+               }
+           }
+           
+        }
+
+    } catch (error: typeof Error | any) {
+        Logger.error(`${error.message}`)   
         // return error
         clientResponse(res, 400, error.message)
       }
@@ -209,9 +247,15 @@ const rateAppointment = async (req:any, res:any) => {
     const { review , rating} = req.body;
 
     try {
+        const isPatient:Boolean = currentUser.role === 'patient';
+        if (!isPatient) {
+            clientResponse(res,400, {
+                message: "Only Patients can share reviews appointments."
+            })
+        }
         const appointment = await AppointmentModel.findByIdAndUpdate(appointmentId);
 
-        if (appointment) {
+        if (appointment?.status === "COMPLETED") {
             console.log(`${currentUser._id} -- ${appointment.patientId} `);
             if (appointment.patientId.toString() != currentUser._id.toString()) {
                 clientResponse(res,404, "Patient Id does not match patient on appointment.")
@@ -224,42 +268,33 @@ const rateAppointment = async (req:any, res:any) => {
                const doctor = await practitionerProfile.findOneAndUpdate(appointment.doctorId);
 
                if (doctor) {
+                if (appointment.review != null) {
+                    const updatedRating =
+                    (doctor.rating * doctor.noOfAppointments + rating) / (doctor.noOfAppointments + 1);
 
-                const updatedRating =
-                (doctor.rating * 6 + rating) / (6 + 1);
+                    doctor.rating = updatedRating;
 
-                console.log(updatedRating);
-                console.log(doctor.noOfAppointments);
-      
-      
-
-
-                doctor.rating = updatedRating;
-
-                await doctor.save()
+                    const isreviewed = doctor.reviews.find(review => review.reviewFrom === appointment.patientId);
+                    
+                    if (isreviewed) {
+                        doctor.reviews.push({review: appointment.review, rating: appointment.rating, reviewFrom: appointment.patientId});
+                    }
+                    
+                    
+                    await doctor.save()
 
                 clientResponse(res,201, {
-                    results:results, 
-                    doctor: doctor,
-                    appointment: doctor.noOfAppointments
+                   message: `You rated this appointment and  Doctor ${doctor.personalInfo?.firstName} ${doctor.personalInfo?.lastName} ${appointment.rating}.`
                    })
-               }
-
-            
-           
-
-
-               
-
+                }            
+               }             
             }
 
         }else{
-            clientResponse(res,201, {
-                message: "invalid appointment Id"
+            clientResponse(res,400, {
+                message: "Invalid appointment Id Or appointment has not been completed."
             })
-        }
-
-        
+        }      
 
     } catch (error: typeof Error | any) {
         Logger.error(`${error.message}`)
@@ -274,4 +309,4 @@ const rateAppointment = async (req:any, res:any) => {
 
 
 
-export { getAllGeneralPractitioners, getSpecialists, getDoctorProfile, createAppointment, getAllUserAppointments, respondToAppointment, rateAppointment}
+export { getAllGeneralPractitioners, getSpecialists, getDoctorProfile, createAppointment, getAllUserAppointments, respondToAppointment, rateAppointment,rescheduleAppointment}
