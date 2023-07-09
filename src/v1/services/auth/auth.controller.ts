@@ -10,14 +10,14 @@ const userService = new Services(User)
 const registerOne = async (req: any, res: any) => {
   try {
     // get user from request
-    const { phone, password, role, google, email, name } = req.body
+    const { phone, password, role, google, email, username } = req.body
 
     if (!google)
     {
       
       if (!phone || !password) throw new Error('Phone and password are required')
       
-      if (!name) throw new Error('Name is required')
+      if (!username) throw new Error('username is required')
 
     }
 
