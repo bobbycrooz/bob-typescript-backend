@@ -76,9 +76,11 @@ const sendOtp = async (req: any, res: any) => {
 }
 
 const verifyOtp = async (req: any, res: any) => {
-  try {
+  try
+  {
     // get user from request
     const { otpCode, otpId, isReseting } = req.body
+    
 
     if (!otpCode || !otpId) throw new Error('No otp  code provided')
 
@@ -89,21 +91,30 @@ const verifyOtp = async (req: any, res: any) => {
     // compare
     if (savedOtp.otp !== otpCode) return clientResponse(res, 403, 'invalid otp code')
 
-    if (isReseting)
+    if (isReseting === true)
     {
-      return clientResponse(res, 200, 'phone number has been verified succesfully')
+      return clientResponse(res, 200, 'Phone number has been verified succesfully')
     }
 
+
+    
     const verifyUser = await User.findOneAndUpdate(
-      { phone: savedOtp.phone },
+      { phone: validateAndFormat(savedOtp.phone) },
       { verified: true },
       {
         new: true
       }
-    )
+    ).lean()
+
+
+
+    let token = asignNewToken(savedOtp.phone)
 
     if (verifyUser) {
-      return clientResponse(res, 200, 'phone number has been verified succesfully')
+      return clientResponse(res, 200, {
+        message: 'Phone number has been verified succesfully',
+        token
+      })
     } else {
       clientResponse(res, 400, 'cant verify at this moment, try again later')
     }

@@ -4,24 +4,28 @@ import {  clientResponse } from '../../helpers/response'
 import { asignNewToken } from '../../helpers/token'
 import { validateAndFormat } from '../../utils'
 import Logger from '../../iibs/logger'
+import Otp from '../otp/otp.model'
+
+import client from 'twilio'
+import otpG from 'otp-generator'
+import { v4 as uuidv4 } from 'uuid'
 
 const userService = new Services(User)
+const otpService = new Services(Otp)
+const accountSid = process.env.ACCSID
+const authToken = process.env.AUTHTOKEN
+
 
 const registerOne = async (req: any, res: any) => {
   try {
     // get user from request
     const { phone, password, role, google, email, username } = req.body
 
-    if (!google)
-    {
-      
+    if (!google) {
       if (!phone || !password) throw new Error('Phone and password are required')
-      
+
       if (!username) throw new Error('username is required')
-
     }
-
-
 
     // google sign In- temporary account untill phone is added
     if (google) {
@@ -29,7 +33,7 @@ const registerOne = async (req: any, res: any) => {
 
       const newGoogleUser = await userService.create({ email, phone, role: role || 'patient' })
 
-     return  clientResponse(res, 201, newGoogleUser)
+      return clientResponse(res, 201, newGoogleUser)
     }
 
     const fmtPhone = validateAndFormat(phone)
@@ -46,16 +50,53 @@ const registerOne = async (req: any, res: any) => {
 
     // // create new user
     const newUserData = {
-      phone:fmtPhone,
+      phone: fmtPhone,
       password,
       role: role || 'patient'
     }
 
     await userService.create(newUserData)
 
-    clientResponse(res, 201, {
-      message: 'user created successfully',
+    // send otp to user
+
+    // const otp = Math.floor(1000 + Math.random() * 9000)
+    var clientOtp = otpG.generate(6, { upperCaseAlphabets: false, specialChars: false })
+
+    const otpId = uuidv4()
+
+    // store otp code
+    await otpService.create({
+      phone: phone,
+      otp: clientOtp,
+      otpId
     })
+
+    const twilioClient = client(accountSid, authToken)
+
+    twilioClient.messages
+      .create({
+        body: `Your otp is ${clientOtp}`,
+        from: '+14179322594',
+        to: fmtPhone as string
+      })
+      .then((message: { sid: any }) => {
+        console.log(message.sid)
+        Logger.info(message.sid)
+        clientResponse(res, 201, {
+          message: 'Account created successfully, An otp has been sent to your phone number',
+          data: {
+            otpId
+          }
+        })
+      })
+      .catch((error: any) => {
+        Logger.error(error)
+        clientResponse(res, 400, error.message)
+      })
+
+    // clientResponse(res, 201, {
+    //   message: 'An otp has been sent to your phone number'
+    // })
 
     // return response
   } catch (error: typeof Error | any) {

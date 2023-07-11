@@ -27,7 +27,7 @@ const profile = async (req: any, res: any) => {
     if (currentUser.role === 'patient') {
       const profile = await patientProfile.findOne({ _id: currentUser.profileId }).lean()
 
-      if (!profile) throw new Error('profile not found')
+      if (!profile) throw new Error('Profile not found')
 
       currentUser.profileId = profile
     } else if (currentUser.role === 'doctor') {
@@ -39,6 +39,7 @@ const profile = async (req: any, res: any) => {
     }
 
     clientResponse(res, 201, currentUser)
+
   } catch (error: any) {
     Logger.error(`${error.message}`)
 
