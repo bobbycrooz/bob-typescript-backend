@@ -116,8 +116,6 @@ const resetPassword = async (req: any, res: any) => {
       { password: newPassword }
     ).lean()
 
-    // const memberPassword = await User.findOne({ phone: validateAndFormat(phone) }).select({ password: 1, _id: 0 })
-
     if (updatedPassword)
     {
       const token = asignNewToken(phone)

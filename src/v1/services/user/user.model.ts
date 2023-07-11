@@ -1,5 +1,5 @@
 import bcrypt from 'bcrypt'
-import mongoose from 'mongoose'
+import mongoose, { Schema } from 'mongoose'
 
 const userSchema = new mongoose.Schema({
   username: {
@@ -63,18 +63,17 @@ const practitionerProfileSchema = new mongoose.Schema({
 
   medicalInfo: {
     specialty: {
-      type: String
-      // required: true,
+      type: String,
+      set: (value: string) => value.toLowerCase()
     },
 
     subSpecialty: {
-      type: String
-      // required: true,
+      type: String,
+      set: (value: string) => value.toLowerCase()
     },
 
     licenseNumber: {
       type: String
-      // required: true,
     },
 
     hospitalName: {
@@ -86,7 +85,27 @@ const practitionerProfileSchema = new mongoose.Schema({
     type: String,
     enum: ['free', 'basic', 'premium'],
     default: 'free'
-  }
+  },
+  consultationFee: {
+    type: Number,
+    default: 1500
+  },
+  reviews: [
+    {
+      review: { type: String, required: true },
+      rating: { type: Number, required: true },
+      reviewFrom: { type: Schema.Types.ObjectId, required: true}
+    }
+  ],
+  rating: {
+    type: Number,
+    default: 0,
+    max: 5
+  },
+  noOfAppointments: {
+    type: Number,
+    default: 0,
+  },
 })
 
 const patientProfileSchema = new mongoose.Schema({
@@ -153,6 +172,13 @@ userSchema.methods.comparePassword = async function (commingPassword: string) {
     })
   })
 }
+
+//method to remove password from json response
+userSchema.methods.toJSON = function() {
+  var obj = this.toObject();
+  delete obj.password;
+  return obj;
+ }
 
 export const patientProfile = mongoose.model('PatientProfile', patientProfileSchema)
 
