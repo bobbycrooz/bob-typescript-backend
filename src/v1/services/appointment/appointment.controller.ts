@@ -13,13 +13,29 @@ const appointmentService = new Services(AppointmentModel)
 
 const getAllGeneralPractitioners = async(req:any, res: any) => {
     try {
-        const allDoctors = await practitionerProfile.find();
+        // const allDoctors = await practitionerProfile.find();
+
+        // let today =  "2023-07-15T08:23:07.008Z"
+
+        const users = await practitionerProfile.find();
+        const allDoctorsResult = users.map((user) => ({
+          firstName: user.personalInfo?.firstName,
+          lastName: user.personalInfo?.lastName,
+          bio: user.bio, 
+          avaialableTime: user.availableDateAndTime,
+          avatar: user.personalInfo?.avatar,
+          ratings: user.rating,
+          consultationFee: user.consultationFee,
+          yearsOfExperience: user.yearsofExperience,
+          hospitalName: user.hospital,
+          noOfReviews: user.reviews.length,
+        }));
 
         clientResponse(res,200, {
-            allDoctors: allDoctors
-        })
+            allDoctors: allDoctorsResult
+        }) 
     } catch (error: typeof Error | any) {
-        Logger.error(`${error.message}`)
+        Logger.error(`${error.message}`) 
     
         // return error
         clientResponse(res, 400, error.message)
