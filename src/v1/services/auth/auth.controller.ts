@@ -5,6 +5,7 @@ import { asignNewToken } from '../../helpers/token'
 import { validateAndFormat } from '../../utils'
 import Logger from '../../iibs/logger'
 import Otp from '../otp/otp.model'
+import walletModel from '../wallet/wallet.model'
 
 import client from 'twilio'
 import otpG from 'otp-generator'
@@ -120,7 +121,7 @@ const logIn = async (req: any, res: any) => {
     if (!isExisting) return clientResponse(res, 401, 'you need to register first you dont exist')
 
     // const user = await userService.getOne({ phone })
-    const user = await User.findOne({ phone: validateAndFormat(phone) })
+    const user = await User.findOne({ phone: validateAndFormat(phone) });
 
     // const memberPassword = await User.findOne({ phone: validateAndFormat(phone) }).select({ password: 1, _id: 0 })
 
@@ -129,9 +130,16 @@ const logIn = async (req: any, res: any) => {
 
     if (!match) return clientResponse(res, 401, 'incorrect password')
 
-    const token = asignNewToken(phone)
+    const token = asignNewToken(phone);
+    let checkForWallet = await walletModel.findOne({ userId: user?._id});
 
-    clientResponse(res, 201, { token: token, member: user })
+    if (!checkForWallet) {
+      const wallet = new walletModel({ userId: user?._id, balance: 0 });
+      await wallet.save();
+    }
+    
+
+    clientResponse(res, 201, { token: token, member: user})
   } catch (error: any) {
     Logger.error('${error.message}')
 
