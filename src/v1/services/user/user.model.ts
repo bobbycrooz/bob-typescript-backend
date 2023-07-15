@@ -44,7 +44,9 @@ const practitionerProfileSchema = new mongoose.Schema({
       // required: true,
       set: (value: string) => value.toLowerCase()
     },
-
+    avatar: {
+      type: String,
+    },
     lastName: {
       type: String,
       // required: true,
@@ -80,7 +82,18 @@ const practitionerProfileSchema = new mongoose.Schema({
       type: String
     }
   },
-
+  bio:{
+    type: String,
+    default: "I am a Doctor"
+  },
+    availableDateAndTime:{
+      type: Date,
+      default: Date.now()
+    },
+    isAvailable:{
+      type: Boolean,
+      default: false,
+    },
   subscriptionPlan: {
     type: String,
     enum: ['free', 'basic', 'premium'],
@@ -97,6 +110,14 @@ const practitionerProfileSchema = new mongoose.Schema({
       reviewFrom: { type: Schema.Types.ObjectId, required: true}
     }
   ],
+  yearsofExperience: {
+    type: Number,
+    default: 1,
+  },
+  hospital: {
+    type: String,
+    default: "No hospital yet"
+  },
   rating: {
     type: Number,
     default: 0,
@@ -106,6 +127,7 @@ const practitionerProfileSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
+
 })
 
 const patientProfileSchema = new mongoose.Schema({
