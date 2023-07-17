@@ -36,7 +36,7 @@ async function authorize(req: Request, res: Response, next: NextFunction) {
     // next(new ErrorException(ErrorCode.Unauthenticated))
     Logger.error(`${error.message} from authorize middleware`)
 
-    clientResponse(res, 400, { error: error.message, message: 'there was a problem signing you in' })
+    clientResponse(res, 401, { error: error.message, message: 'User not authorized!' })
   }
 }
 

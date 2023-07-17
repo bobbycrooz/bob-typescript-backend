@@ -9,33 +9,29 @@ export function validateAndFormat(phoneNumber: any) {
   const regex = /^(09|234)?[0-9]{11}$/
   // const ngnNumber = /^(\+234|0)?(1|01)[0-9]{9}$/
 
+  if (phoneNumber.startsWith('+234')) {
+    return phoneNumber
+  }
+
   let formatedPhone
 
   const isValid = regex.test(String(phoneNumber))
 
   console.log(isValid)
 
-  if (isValid)
-  {
-    
+  if (isValid) {
     if (phoneNumber.startsWith('0')) {
       formatedPhone = '+234' + phoneNumber.slice(1)
     }
 
-    if (phoneNumber.startsWith('+234'))
-    {
+    if (phoneNumber.startsWith('+234')) {
       formatedPhone = phoneNumber
     }
-
-
-    
   } else {
     throw new Error('invalid phone number')
   }
   return formatedPhone
 }
-
-
 
 export function generateRandomCode(length: number) {
   let code = ''

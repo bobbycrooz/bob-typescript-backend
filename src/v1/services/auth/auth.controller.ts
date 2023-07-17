@@ -11,8 +11,8 @@ import { SendOTP } from '../../libs/temiiOTP'
 
 const userService = new Services(User)
 const otpService = new Services(Otp)
-const accountSid = process.env.ACCSID
-const authToken = process.env.AUTHTOKEN
+// const accountSid = process.env.ACCSID
+// const authToken = process.env.AUTHTOKEN
 
 const registerOne = async (req: any, res: any) => {
   try {
@@ -58,33 +58,28 @@ const registerOne = async (req: any, res: any) => {
     // send otp to user
     const sendOtpResult = await SendOTP(fmtPhone)
 
-    if (sendOtpResult.data.message === 'Insufficient balance')
-    {
+    if (sendOtpResult.message === 'Insufficient balance') {
       return clientResponse(res, 201, {
-        message: 'Account created but there was a problem verifying your number',
-      
+        message: 'Account created but there was a problem verifying your number'
       })
-    };
-
+    }
 
     // if otp was sent successfully
-    if (sendOtpResult.data.status !== 'error') {
+    if (sendOtpResult.status === true) {
       // save otp to db and return otpId
       await otpService.create({
-        phone: phone,
+        phone: fmtPhone,
         otp: sendOtpResult.otpCode,
-        otpId: sendOtpResult.data.message_id
+        otpId: sendOtpResult.otpId
       })
 
       return clientResponse(res, 201, {
         message: 'Account created successfully, An otp has been sent to your phone number',
         data: {
-          otpId: sendOtpResult.data.message_id,
-          phone: phone
+          otpId: sendOtpResult.otpId
         }
       })
     }
-
 
     // return response
   } catch (error: typeof Error | any) {
@@ -118,7 +113,7 @@ const logIn = async (req: any, res: any) => {
 
     const token = asignNewToken(phone)
 
-    clientResponse(res, 201, { token: token, member: user })
+    clientResponse(res, 201, { token: token, user: user })
   } catch (error: any) {
     Logger.error('${error.message}')
 

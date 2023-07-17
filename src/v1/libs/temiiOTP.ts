@@ -8,11 +8,12 @@ export async function SendOTP(phone: number)
 {
   
 
-  const otpCode = generateRandomCode(6)
+  const genOtpCode = generateRandomCode(6)
+
   const OtpData = {
     to: phone,
     from: 'selfTut',
-    sms: `Hi your DokRx OTP code is ${otpCode}`,
+    sms: `Hi your DokRx OTP code is ${genOtpCode}`,
     type: 'plain',
     channel: 'generic',
     api_key: 'TLGebSSg5RAdNwm2IYUEgMPgDitGB33e5pzWxfkheToP8wnVZ0IzwYCpod8UEk'
@@ -34,9 +35,18 @@ export async function SendOTP(phone: number)
   const data = await response.json()
 
   console.log(data)
+  if (data.code === "ok")
+  {
+    return {
+      status: true,
+      otpId: data.message_id,
+      otpCode: genOtpCode,
+      message: data.message
+    }
+  }
 
   return {
-    otpCode,
-    data
+    status: false,
+    message: data.message
   }
 }

@@ -38,16 +38,41 @@ const sendOtp = async (req: any, res: any) => {
 
     const sendOtpResult = await SendOTP(validateAndFormat(phone))
 
+    if (sendOtpResult.status === false)
+    { 
+      return clientResponse(res, 408, {
+        message: `we couldn't send otp to this number at this time due to ${sendOtpResult.message}`
+      })
+     }
 
-    if (sendOtpResult.data.message === 'Insufficient balance') {
+    if (sendOtpResult.message === 'Insufficient balance') {
       return clientResponse(res, 201, {
         message: 'Account created but there was a problem verifying your number',
       
       })
     }
 
+    if (sendOtpResult.status === true)
+    {
+      const otpData = {
+        phone: validateAndFormat(phone),
+        otpId: sendOtpResult.otpId,
+        otp: sendOtpResult.otpCode
+      }
+  
+      const saveOtp = await otpService.create(otpData)
+  
+      if (!saveOtp) {
+        return clientResponse(res, 400, {
+          message: 'could not save otp to database'
+        })  
+      }
+    }
+
+
       return clientResponse(res, 201, {
-        message: 'An OTP has been sent to your number.'
+        message: 'An OTP has been sent to your number.',
+        otpId: sendOtpResult.otpId,
       })
 
     // if (['Insufficient balance'].includes())
@@ -84,7 +109,7 @@ const verifyOtp = async (req: any, res: any) => {
     }
 
     const verifyUser = await User.findOneAndUpdate(
-      { phone: validateAndFormat(savedOtp.phone) },
+      { phone: savedOtp.phone },
       { verified: true },
       {
         new: true
