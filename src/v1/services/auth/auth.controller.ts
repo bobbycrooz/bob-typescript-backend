@@ -1,20 +1,18 @@
 import User from '../user/user.model'
 import Services from '../../helpers/model.helper'
-import {  clientResponse } from '../../helpers/response'
+import { clientResponse } from '../../helpers/response'
 import { asignNewToken } from '../../helpers/token'
 import { validateAndFormat } from '../../utils'
-import Logger from '../../iibs/logger'
+import Logger from '../../libs/logger'
 import Otp from '../otp/otp.model'
 
-import client from 'twilio'
-import otpG from 'otp-generator'
 import { v4 as uuidv4 } from 'uuid'
+import { SendOTP } from '../../libs/temiiOTP'
 
 const userService = new Services(User)
 const otpService = new Services(Otp)
 const accountSid = process.env.ACCSID
 const authToken = process.env.AUTHTOKEN
-
 
 const registerOne = async (req: any, res: any) => {
   try {
@@ -41,7 +39,7 @@ const registerOne = async (req: any, res: any) => {
     // formatPhone(phone)
 
     // // check if user already exists
-    const isExisting = await userService.getOne({ phone })
+    const isExisting = await userService.getOne({ phone: fmtPhone })
 
     if (isExisting) {
       // return error
@@ -58,45 +56,35 @@ const registerOne = async (req: any, res: any) => {
     await userService.create(newUserData)
 
     // send otp to user
+    const sendOtpResult = await SendOTP(fmtPhone)
 
-    // const otp = Math.floor(1000 + Math.random() * 9000)
-    var clientOtp = otpG.generate(6, { upperCaseAlphabets: false, specialChars: false })
-
-    const otpId = uuidv4()
-
-    // store otp code
-    await otpService.create({
-      phone: phone,
-      otp: clientOtp,
-      otpId
-    })
-
-    const twilioClient = client(accountSid, authToken)
-
-    twilioClient.messages
-      .create({
-        body: `Your otp is ${clientOtp}`,
-        from: '+14179322594',
-        to: fmtPhone as string
+    if (sendOtpResult.data.message === 'Insufficient balance')
+    {
+      return clientResponse(res, 201, {
+        message: 'Account created but there was a problem verifying your number',
+      
       })
-      .then((message: { sid: any }) => {
-        console.log(message.sid)
-        Logger.info(message.sid)
-        clientResponse(res, 201, {
-          message: 'Account created successfully, An otp has been sent to your phone number',
-          data: {
-            otpId
-          }
-        })
-      })
-      .catch((error: any) => {
-        Logger.error(error)
-        clientResponse(res, 400, error.message)
+    };
+
+
+    // if otp was sent successfully
+    if (sendOtpResult.data.status !== 'error') {
+      // save otp to db and return otpId
+      await otpService.create({
+        phone: phone,
+        otp: sendOtpResult.otpCode,
+        otpId: sendOtpResult.data.message_id
       })
 
-    // clientResponse(res, 201, {
-    //   message: 'An otp has been sent to your phone number'
-    // })
+      return clientResponse(res, 201, {
+        message: 'Account created successfully, An otp has been sent to your phone number',
+        data: {
+          otpId: sendOtpResult.data.message_id,
+          phone: phone
+        }
+      })
+    }
+
 
     // return response
   } catch (error: typeof Error | any) {
@@ -107,8 +95,7 @@ const registerOne = async (req: any, res: any) => {
   }
 }
 
-
-// login 
+// login
 const logIn = async (req: any, res: any) => {
   const { phone, password } = req.body
 
@@ -125,7 +112,7 @@ const logIn = async (req: any, res: any) => {
     // const memberPassword = await User.findOne({ phone: validateAndFormat(phone) }).select({ password: 1, _id: 0 })
 
     // @ts-ignore
-    const match = await user.comparePassword(password) 
+    const match = await user.comparePassword(password)
 
     if (!match) return clientResponse(res, 401, 'incorrect password')
 
@@ -139,8 +126,7 @@ const logIn = async (req: any, res: any) => {
   }
 }
 
-
-// reset password 
+// reset password
 const resetPassword = async (req: any, res: any) => {
   const { phone, newPassword } = req.body
 
@@ -157,24 +143,16 @@ const resetPassword = async (req: any, res: any) => {
       { password: newPassword }
     ).lean()
 
-    if (updatedPassword)
-    {
+    if (updatedPassword) {
       const token = asignNewToken(phone)
 
-      
-      return clientResponse(res, 201, { token: token, message: "password has been updated successfully" })
-      
+      return clientResponse(res, 201, { token: token, message: 'password has been updated successfully' })
     }
-
-
-
   } catch (error: any) {
     Logger.error('${error.message}')
 
     clientResponse(res, 400, { error: error.message, message: 'there was a problem signing you in' })
   }
 }
-
-
 
 export { registerOne, logIn, resetPassword }

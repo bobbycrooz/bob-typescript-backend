@@ -1,4 +1,4 @@
-import Logger from "../iibs/logger"
+import Logger from "../libs/logger"
 
 class Services {
   model: any

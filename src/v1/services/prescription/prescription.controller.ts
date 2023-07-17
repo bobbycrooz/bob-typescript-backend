@@ -2,7 +2,7 @@ import User from '../user/user.model'
 import PrescriptionModel from './prescription.model'
 import Services from '../../helpers/model.helper'
 import { clientResponse } from '../../helpers/response'
-import Logger from '../../iibs/logger'
+import Logger from '../../libs/logger'
 import { prescriptionDataSchema } from '../../utils/validation/prescriptionValidation'
 
 const userService = new Services(User)

@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { clientResponse } from '../helpers/response'
 import { getUserFromToken } from '../helpers/token'
-import Logger from '../iibs/logger'
+import Logger from '../libs/logger'
 import { validateAndFormat } from '../utils'
 import { Request, NextFunction, Response } from 'express'
 import User from '../services/user/user.model'

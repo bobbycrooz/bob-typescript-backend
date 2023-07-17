@@ -2,7 +2,7 @@ import upload from '../../utils/multer';
 import { clientResponse } from '../../helpers/response';
 import cloudinary from '../../utils/cloudinary';
 import fs from 'fs';
-import Logger from '../../iibs/logger';
+import Logger from '../../libs/logger';
 
 
 const uploadImage = async(req:any, res: any) => {

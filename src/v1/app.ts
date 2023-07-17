@@ -1,5 +1,5 @@
 import express, { NextFunction, Request, Response } from 'express'
-import Logger from './iibs/logger'
+import Logger from './libs/logger'
 import cors from 'cors'
 import helmet from 'helmet'
 import rateLimiter from 'express-rate-limit'

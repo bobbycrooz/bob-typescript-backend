@@ -1,20 +1,24 @@
 import User from '../user/user.model'
 import Otp from './otp.model'
 import Services from '../../helpers/model.helper'
-import {  clientResponse } from '../../helpers/response'
+import { clientResponse } from '../../helpers/response'
 import { asignNewToken } from '../../helpers/token'
-
-import { validateAndFormat } from '../../utils'
-import Logger from '../../iibs/logger'
+import { generateRandomCode, validateAndFormat } from '../../utils'
+import Logger from '../../libs/logger'
 import client from 'twilio'
-import otpG from 'otp-generator'
-import { v4 as uuidv4 } from 'uuid'
 
+// @ts-ignore
+import Jusibe from 'jusibe'
+import { SendOTP } from "../../libs/temiiOTP"
 const userService = new Services(User)
+
 const otpService = new Services(Otp)
 
 const accountSid = process.env.ACCSID
+
 const authToken = process.env.AUTHTOKEN
+
+const jusibe = new Jusibe('fccad1ae6c9759953f4ad908f78bb6de', '9595e6a47f50086758ce43ac997342be')
 
 const sendOtp = async (req: any, res: any) => {
   try {
@@ -28,43 +32,29 @@ const sendOtp = async (req: any, res: any) => {
 
     if (!isExisting) {
       // return error
-      throw new Error('you need to register this phone number first')
+      throw new Error('You need to register this phone number first')
     }
 
-    // const otp = Math.floor(1000 + Math.random() * 9000)
-    var clientOtp = otpG.generate(6, { upperCaseAlphabets: false, specialChars: false })
 
-    const otpId = uuidv4()
+    const sendOtpResult = await SendOTP(validateAndFormat(phone))
 
-    // store otp code
-    await otpService.create({
-      phone: validateAndFormat(phone),
-      otp: clientOtp,
-      otpId
-    })
 
-    const twilioClient = client(accountSid, authToken)
-
-    twilioClient.messages
-      .create({
-        body: `Your otp is ${clientOtp}`,
-        from: '+14179322594',
-        to: `${validateAndFormat(phone)}`
+    if (sendOtpResult.data.message === 'Insufficient balance') {
+      return clientResponse(res, 201, {
+        message: 'Account created but there was a problem verifying your number',
+      
       })
-      .then((message: { sid: any }) => {
-        console.log(message.sid)
-        Logger.info(message.sid)
-        clientResponse(res, 201, {
-          message: 'otp sent successfully',
-          data: {
-            otpId
-          }
-        })
+    }
+
+      return clientResponse(res, 201, {
+        message: 'An OTP has been sent to your number.'
       })
-      .catch((error: any) => {
-        Logger.error(error)
-        clientResponse(res, 400, error.message)
-      })
+
+    // if (['Insufficient balance'].includes())
+    //   clientResponse(res, 400, {
+    //     message: 'something went wron',
+    //     data: sendOtpResult
+    //   })
 
     // return response
   } catch (error: typeof Error | any) {
@@ -76,11 +66,9 @@ const sendOtp = async (req: any, res: any) => {
 }
 
 const verifyOtp = async (req: any, res: any) => {
-  try
-  {
+  try {
     // get user from request
     const { otpCode, otpId, isReseting } = req.body
-    
 
     if (!otpCode || !otpId) throw new Error('No otp  code provided')
 
@@ -91,13 +79,10 @@ const verifyOtp = async (req: any, res: any) => {
     // compare
     if (savedOtp.otp !== otpCode) return clientResponse(res, 403, 'invalid otp code')
 
-    if (isReseting === true)
-    {
+    if (isReseting === true) {
       return clientResponse(res, 200, 'Phone number has been verified succesfully')
     }
 
-
-    
     const verifyUser = await User.findOneAndUpdate(
       { phone: validateAndFormat(savedOtp.phone) },
       { verified: true },
@@ -105,8 +90,6 @@ const verifyOtp = async (req: any, res: any) => {
         new: true
       }
     ).lean()
-
-
 
     let token = asignNewToken(savedOtp.phone)
 

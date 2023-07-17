@@ -34,3 +34,14 @@ export function validateAndFormat(phoneNumber: any) {
   }
   return formatedPhone
 }
+
+
+
+export function generateRandomCode(length: number) {
+  let code = ''
+  for (let i = 0; i < length; i++) {
+    const randomDigit = Math.floor(Math.random() * 10)
+    code += randomDigit
+  }
+  return code
+}

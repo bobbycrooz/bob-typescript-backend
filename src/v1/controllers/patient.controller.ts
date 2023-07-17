@@ -3,7 +3,7 @@ import Services from '../helpers/model.helper'
 import {  clientResponse } from '../helpers/response'
 // import { asignNewToken } from '../helpers/token'
 import { validateAndFormat } from '../utils'
-import Logger from '../iibs/logger'
+import Logger from '../libs/logger'
 
 const userService = new Services(User)
 
