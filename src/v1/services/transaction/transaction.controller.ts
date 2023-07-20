@@ -3,7 +3,7 @@ import TransactiontModel from './transaction.model'
 import { practitionerProfile, patientProfile } from '../user/user.model'
 import Services from '../../helpers/model.helper'
 import { clientResponse } from '../../helpers/response'
-import Logger from '../../iibs/logger';
+import Logger from '../../libs/logger';
 import { transactionValidationSchema } from '../../utils/validation/index'
 import walletModel from '../wallet/wallet.model'
 

@@ -3,6 +3,7 @@ import otpG from 'otp-generator'
 import { v4 as uuidv4 } from 'uuid'
 import request from 'request'
 import { generateRandomCode } from '../utils'
+import config from '../config'
 
 export async function SendOTP(phone: number)
 {
@@ -16,7 +17,7 @@ export async function SendOTP(phone: number)
     sms: `Hi your DokRx OTP code is ${genOtpCode}`,
     type: 'plain',
     channel: 'generic',
-    api_key: 'TLGebSSg5RAdNwm2IYUEgMPgDitGB33e5pzWxfkheToP8wnVZ0IzwYCpod8UEk'
+    api_key: config.TERMI_API_KEY
   }
 
   const url = 'https://api.ng.termii.com/api/sms/send'
