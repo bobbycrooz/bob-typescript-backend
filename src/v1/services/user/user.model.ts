@@ -45,7 +45,7 @@ const practitionerProfileSchema = new mongoose.Schema({
       set: (value: string) => value.toLowerCase()
     },
     avatar: {
-      type: String,
+      type: String
     },
     lastName: {
       type: String,
@@ -82,22 +82,26 @@ const practitionerProfileSchema = new mongoose.Schema({
       type: String
     }
   },
-  bio:{
+  bio: {
     type: String,
-    default: "I am a Doctor"
+    default: 'I am a Doctor'
   },
-    availableDateAndTime:{
-      type: Date,
-      default: Date.now()
+  availableDateAndTime: {
+    type: Date,
+    default: Date.now()
+  },
+  isAvailable: {
+    type: Boolean,
+    default: false
+  },
+  subscription: {
+    plan: {
+      type: String,
+      enum: ['free', 'basic', 'premium'],
+      default: 'free'
     },
-    isAvailable:{
-      type: Boolean,
-      default: false,
-    },
-  subscriptionPlan: {
-    type: String,
-    enum: ['free', 'basic', 'premium'],
-    default: 'free'
+    startDate: Date,
+    endDate:Date
   },
   consultationFee: {
     type: Number,
@@ -107,16 +111,16 @@ const practitionerProfileSchema = new mongoose.Schema({
     {
       review: { type: String, required: true },
       rating: { type: Number, required: true },
-      reviewFrom: { type: Schema.Types.ObjectId, required: true}
+      reviewFrom: { type: Schema.Types.ObjectId, required: true }
     }
   ],
   yearsofExperience: {
     type: Number,
-    default: 1,
+    default: 1
   },
   hospital: {
     type: String,
-    default: "No hospital yet"
+    default: 'No hospital yet'
   },
   rating: {
     type: Number,
@@ -125,9 +129,8 @@ const practitionerProfileSchema = new mongoose.Schema({
   },
   noOfAppointments: {
     type: Number,
-    default: 0,
-  },
-
+    default: 0
+  }
 })
 
 const patientProfileSchema = new mongoose.Schema({

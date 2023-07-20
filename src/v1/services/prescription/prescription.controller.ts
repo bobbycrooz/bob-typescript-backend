@@ -22,13 +22,10 @@ const createPrescription = async (req: any, res: any) => {
     // get prescription details
     const prescriptionData = req.body
 
-    if (isDoctor && !prescriptionData.prescribedTo)
-    {
-      
+    if (isDoctor && !prescriptionData.prescribedTo) {
       return clientResponse(res, 400, {
         message: `Provide the patient ID you are prescribing to.`
       })
-
     }
 
     //   validate prescription details
@@ -37,20 +34,15 @@ const createPrescription = async (req: any, res: any) => {
     // create new prescription
     await prescriptionService.create({
       ...prescriptionData,
-      prescribedBy: prescriptionData.prescribedBy || currentUser.id,
+      prescribedBy: prescriptionData.prescribedBy || currentUser.id
     })
-
-
-
 
     clientResponse(res, 201, {
       message: `prescription  created successfully for user: ${prescriptionData.contact.name}`
     })
 
     // return response
-  } catch (error: typeof Error | any)
-  {
-    
+  } catch (error: typeof Error | any) {
     Logger.error(`${error.message} from this message box`)
 
     // return error
@@ -86,10 +78,8 @@ const getPrescriptions = async (req: any, res: any) => {
     // const allprescriptionData = await prescriptionService.getByQuery(filterBy)
     const allprescriptionData = await PrescriptionModel.find(filterBy).populate({
       path: 'prescribedTo prescribedBy approvedBy rejectedBy',
-      select: 'name phone role' 
+      select: 'name phone role'
     })
-
-
 
     if (allprescriptionData) {
       return clientResponse(res, 201, {
@@ -107,8 +97,7 @@ const getPrescriptions = async (req: any, res: any) => {
 }
 
 // Get doctor  prescriptions history
-const prescriptionHistory = async (req: any, res: any) =>
-{
+const prescriptionHistory = async (req: any, res: any) => {
   Logger.info('prescription history ---kgot here')
 
   try {
@@ -202,26 +191,25 @@ const rejectPrescription = async (req: any, res: any) => {
     }
 
     //  reject the prescription
-      const rejectedPes = await PrescriptionModel.findOneAndUpdate(
-        { _id: id, 'underReview.by': currentUser._id },
+    const rejectedPes = await PrescriptionModel.findOneAndUpdate(
+      { _id: id, 'underReview.by': currentUser._id },
 
-        {
-          $set: {
-            rejectedBy: currentUser._id,
-            status: 'rejected'
-          }
-        },
-        { new: true }
-      ).populate({
-        path: 'rejectedBy',
-        select: 'name phone role'
+      {
+        $set: {
+          rejectedBy: currentUser._id,
+          status: 'rejected'
+        }
+      },
+      { new: true }
+    ).populate({
+      path: 'rejectedBy',
+      select: 'name phone role'
+    })
+
+    if (rejectedPes)
+      return clientResponse(res, 201, {
+        rejectedPes
       })
-
-
-      if (rejectedPes)
-        return clientResponse(res, 201, {
-          rejectedPes
-        })
 
     return clientResponse(res, 400, 'This prescription is not under review by you.')
 
@@ -258,38 +246,31 @@ const approvePrescription = async (req: any, res: any) => {
       })
     }
 
+    // approve the prescription
+    const approvedPres = await PrescriptionModel.findOneAndUpdate(
+      { _id: id, 'underReview.by': currentUser._id },
 
-      // approve the prescription 
-      const approvedPres = await PrescriptionModel.findOneAndUpdate(
-        { _id: id , 'underReview.by': currentUser._id},
-
-        {
-          $set: {
-            approvedBy: currentUser._id,
-            status: 'approved',
-            underReview: {
-              value: false,
-              by: null
-            }
-
+      {
+        $set: {
+          approvedBy: currentUser._id,
+          status: 'approved',
+          underReview: {
+            value: false,
+            by: null
           }
-        },
-        { new: true }
-      ).populate({
-        path: 'approvedBy',
-        select: 'name phone role'
+        }
+      },
+      { new: true }
+    ).populate({
+      path: 'approvedBy',
+      select: 'name phone role'
+    })
+
+    if (approvedPres) {
+      return clientResponse(res, 201, {
+        approvedPres
       })
-
-
-
-    if (approvedPres)
-    {
-         return clientResponse(res, 201, {
-          approvedPres
-        })
-      }
-       
-    
+    }
 
     return clientResponse(res, 400, 'priscription not under review by you.')
 
@@ -304,7 +285,6 @@ const approvePrescription = async (req: any, res: any) => {
 
 // select prescription for review by a doctor
 const selectPrescriptionForReview = async (req: any, res: any) => {
-
   try {
     // get the prescription id from the request
     const id = req.params.id
@@ -406,20 +386,39 @@ const cancleSelectedPriscription = async (req: any, res: any) => {
             underReview: {
               value: false,
               by: null
-            },
-         
+            }
           }
         },
         { new: true }
       )
 
-
-      
-
       if (canclePresByDoctor) return clientResponse(res, 201, `Prescription now canceled by ${currentUser.phone}`)
     }
 
     return clientResponse(res, 400, 'somthing went wrong canceling this prescription.')
+    // return response
+  } catch (error: typeof Error | any) {
+    Logger.error(`${error.message}`)
+
+    // return error
+    clientResponse(res, 400, error.message)
+  }
+}
+
+const getUserTotalPrescriptions = async (req: any, res: any) => {
+  try {
+    const currentUser = req.user
+
+
+    const modifiedPhoneNumber = '0' + currentUser.phone.slice(4)
+
+    const totalUserPrescription = await PrescriptionModel.find({ 'contact.phone': modifiedPhoneNumber }).count()
+
+
+    return clientResponse(res, 201, {
+      total: totalUserPrescription
+    })
+
     // return response
   } catch (error: typeof Error | any) {
     Logger.error(`${error.message}`)
@@ -437,5 +436,6 @@ export {
   rejectPrescription,
   approvePrescription,
   cancleSelectedPriscription,
-  prescriptionHistory
+  prescriptionHistory,
+  getUserTotalPrescriptions
 }

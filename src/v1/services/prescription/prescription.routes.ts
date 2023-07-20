@@ -7,7 +7,8 @@ import {
   prescriptionHistory,
   cancleSelectedPriscription,
   rejectPrescription,
-  approvePrescription
+  approvePrescription,
+  getUserTotalPrescriptions
 } from './prescription.controller'
 
 const router = Router()
@@ -15,6 +16,8 @@ const router = Router()
 router.post('/', createPrescription) //tested
 
 router.get('/', getPrescriptions)  //tested
+
+router.get('/total', getUserTotalPrescriptions)  //tested
 
 router.get('/history', prescriptionHistory) //doctor  tested
 

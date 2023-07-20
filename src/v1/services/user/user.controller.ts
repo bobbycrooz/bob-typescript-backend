@@ -39,7 +39,6 @@ const profile = async (req: any, res: any) => {
     }
 
     clientResponse(res, 201, currentUser)
-
   } catch (error: any) {
     Logger.error(`${error.message}`)
 
@@ -60,7 +59,6 @@ const getProfileById = async (req: any, res: any) => {
     // const user = await userService.getById(id)
 
     const user = await User.findById({ _id: id }).select('profileId role').lean()
-
 
     let userProfile
 
@@ -136,4 +134,52 @@ const updateProfile = async (req: any, res: any) => {
   }
 }
 
-export { profile, updateProfile, getProfileById }
+const updateAvailability = async (req: any, res: any) => {
+  try {
+    // get user from request
+    const currentUser = req.user
+
+    const currentStatus = req.params.isAvailable
+
+    if (!['available', 'unavailable'].includes(currentStatus)) {
+      return clientResponse(res, 400, {
+        message: `Status must be one of 'available' or 'unavailable'.`
+      })
+    }
+
+    if (currentUser.profileId === '' || currentUser.profileId === null || !currentUser.profileId) {
+      return clientResponse(res, 400, {
+        message: `You need to update your profile first.`
+      })
+    }
+
+    if (currentUser.role !== 'doctor') {
+      return clientResponse(res, 400, {
+        message: `Only practitional can change availabilty!`
+      })
+    }
+
+    const updated = await practitionerProfile.updateOne(
+      { _id: currentUser.profileId },
+      {
+        isAvailable: currentStatus === 'available' ? true : 'false'
+      },
+      { new: true }
+    )
+
+    if (updated) {
+      return clientResponse(res, 201, 'Status has been updated succesfully! ')
+    }
+
+    //  clientResponse(res, 201, '.')
+
+    // return response
+  } catch (error: typeof Error | any) {
+    Logger.error(`${error.message}`)
+
+    // return error
+    clientResponse(res, 400, error.message)
+  }
+}
+
+export { profile, updateProfile, getProfileById, updateAvailability }
