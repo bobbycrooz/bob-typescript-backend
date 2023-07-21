@@ -1,4 +1,4 @@
-import User from '../user/user.model'
+import User, { patientProfile, practitionerProfile } from '../user/user.model'
 import Services from '../../helpers/model.helper'
 import { clientResponse } from '../../helpers/response'
 import { asignNewToken } from '../../helpers/token'
@@ -18,22 +18,19 @@ const otpService = new Services(Otp)
 const registerOne = async (req: any, res: any) => {
   try {
     // get user from request
-    const { phone, password, role, google, email, username } = req.body
+    const { phone, password, role, firstName, lastName } = req.body
 
-    if (!google) {
-      if (!phone || !password) throw new Error('Phone and password are required')
+   if (!phone || !password) throw new Error('Phone and password are required')
 
-      if (!username) throw new Error('username is required')
-    }
-
+   if (!firstName) throw new Error('firstName is required')
     // google sign In- temporary account untill phone is added
-    if (google) {
-      if (!email || !phone) throw new Error('Email and phone is required for google auth')
+    // if (google) {
+    //   if (!email || !phone) throw new Error('Email and phone is required for google auth')
 
-      const newGoogleUser = await userService.create({ email, phone, role: role || 'patient' })
+    //   const newGoogleUser = await userService.create({ email, phone, role: role || 'patient' })
 
-      return clientResponse(res, 201, newGoogleUser)
-    }
+    //   return clientResponse(res, 201, newGoogleUser)
+    // }
 
     const fmtPhone = validateAndFormat(phone)
 
@@ -44,43 +41,114 @@ const registerOne = async (req: any, res: any) => {
 
     if (isExisting) {
       // return error
-      throw new Error('user already exists')
+      throw new Error('User already exists')
     }
 
-    // // create new user
-    const newUserData = {
-      phone: fmtPhone,
-      password,
-      role: role || 'patient'
-    }
+// declare profile id
+    let profile
 
-    await userService.create(newUserData)
+    // create a profile
+         if (role === 'patient') {
+           const newProfile = await patientProfile.create({
+             personalInfo: {
+               firstName,
+               lastName
+             }
+           })
 
-    // send otp to user
-    const sendOtpResult = await SendOTP(fmtPhone)
+         
 
-    if (sendOtpResult.message === 'Insufficient balance') {
-      return clientResponse(res, 201, {
-        message: 'Account created but there was a problem verifying your number'
-      })
-    }
+           profile = newProfile
 
-    // if otp was sent successfully
-    if (sendOtpResult.status === true) {
-      // save otp to db and return otpId
-      await otpService.create({
+         } else if (role === 'doctor') {
+           const newProfile = await practitionerProfile.create({
+             personalInfo: {
+               firstName,
+               lastName
+             }
+           })
+
+           // update user model to have profile id
+           profile = newProfile
+          
+         }
+
+
+
+
+    if (role === 'patient')
+    {
+      // // create new user
+      const newUserData = {
         phone: fmtPhone,
-        otp: sendOtpResult.otpCode,
-        otpId: sendOtpResult.otpId
-      })
+        password,
+        role: 'patient',
+        profileId: profile?._id,
+      }
+
+
+    const newUser = await userService.create(newUserData)
+
+      
+      if (newUser)
+      {
+      
+        // send otp
+           const sendOtpResult = await SendOTP(fmtPhone)
+
+           if (sendOtpResult.message === 'Insufficient balance') {
+             return clientResponse(res, 201, {
+               message: 'Something went wrong pls try again!'
+             })
+           }
+
+           // if otp was sent successfully
+           if (sendOtpResult.status === true) {
+             // save otp to db and return otpId
+             await otpService.create({
+               phone: fmtPhone,
+               otp: sendOtpResult.otpCode,
+               otpId: sendOtpResult.otpId
+             })
+           }
+
+
 
       return clientResponse(res, 201, {
-        message: 'Account created successfully, An otp has been sent to your phone number',
-        data: {
-          otpId: sendOtpResult.otpId
-        }
+        message: 'Account created successfully. An OTP has been sent to your phone!',
+        otpId: sendOtpResult.otpId,
+        phone: fmtPhone
       })
     }
+
+    } else if (role === 'doctor')
+    {
+      // // create new user
+      const newUserData = {
+        phone: fmtPhone,
+        password,
+        role: role || 'patient',
+        profileId: profile?._id,
+        verified: true
+      }
+
+    const newUser = await userService.create(newUserData)
+
+    if (newUser) {
+      const token = asignNewToken(phone)
+
+      return clientResponse(res, 201, {
+        message: 'Account created successfully.',
+        token,
+        newUser,
+        profile
+      })
+    }
+    }
+    
+
+      
+    
 
     // return response
   } catch (error: typeof Error | any) {

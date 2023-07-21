@@ -1,4 +1,4 @@
-import User from '../user/user.model'
+import User, { patientProfile } from '../user/user.model'
 import Otp from './otp.model'
 import Services from '../../helpers/model.helper'
 import { clientResponse } from '../../helpers/response'
@@ -9,7 +9,7 @@ import client from 'twilio'
 
 // @ts-ignore
 import Jusibe from 'jusibe'
-import { SendOTP } from "../../libs/temiiOTP"
+import { SendOTP } from '../../libs/temiiOTP'
 const userService = new Services(User)
 
 const otpService = new Services(Otp)
@@ -35,45 +35,40 @@ const sendOtp = async (req: any, res: any) => {
       throw new Error('You need to register this phone number first')
     }
 
-
     const sendOtpResult = await SendOTP(validateAndFormat(phone))
 
-    if (sendOtpResult.status === false)
-    { 
+    if (sendOtpResult.status === false) {
       return clientResponse(res, 408, {
         message: `we couldn't send otp to this number at this time due to ${sendOtpResult.message}`
       })
-     }
+    }
 
     if (sendOtpResult.message === 'Insufficient balance') {
       return clientResponse(res, 201, {
-        message: 'Account created but there was a problem verifying your number',
-      
+        message: 'Account created but there was a problem verifying your number'
       })
     }
 
-    if (sendOtpResult.status === true)
-    {
+    if (sendOtpResult.status === true) {
       const otpData = {
         phone: validateAndFormat(phone),
         otpId: sendOtpResult.otpId,
         otp: sendOtpResult.otpCode
       }
-  
+
       const saveOtp = await otpService.create(otpData)
-  
+
       if (!saveOtp) {
         return clientResponse(res, 400, {
           message: 'could not save otp to database'
-        })  
+        })
       }
     }
 
-
-      return clientResponse(res, 201, {
-        message: 'An OTP has been sent to your number.',
-        otpId: sendOtpResult.otpId,
-      })
+    return clientResponse(res, 201, {
+      message: 'An OTP has been sent to your number.',
+      otpId: sendOtpResult.otpId
+    })
 
     // if (['Insufficient balance'].includes())
     //   clientResponse(res, 400, {
@@ -116,16 +111,26 @@ const verifyOtp = async (req: any, res: any) => {
       }
     ).lean()
 
-    let token = asignNewToken(savedOtp.phone)
+    // find user profile
+    if (verifyUser?.role === 'patient') {
+      const userProfile = await patientProfile.findById({ _id: verifyUser?.profileId }).lean()
 
-    if (verifyUser) {
+      let token = asignNewToken(savedOtp.phone)
+
       return clientResponse(res, 200, {
         message: 'Phone number has been verified succesfully',
-        token
+        token,
+        user: verifyUser,
+        userProfile
       })
-    } else {
-      clientResponse(res, 400, 'cant verify at this moment, try again later')
     }
+
+    let token = asignNewToken(savedOtp.phone)
+
+    return clientResponse(res, 200, {
+      message: 'Phone number has been verified succesfully',
+      token
+    })
   } catch (error: typeof Error | any) {
     Logger.error(`${error.message}`)
 

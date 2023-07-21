@@ -166,10 +166,14 @@ const patientProfileSchema = new mongoose.Schema({
     houseNumber: String
   },
 
-  subscriptionPlan: {
-    type: String,
-    enum: ['free', 'basic', 'premium'],
-    default: 'free'
+  subscription: {
+    plan: {
+      type: String,
+      enum: ['free', 'basic', 'premium'],
+      default: 'free'
+    },
+    startDate: Date,
+    endDate: Date
   }
 })
 
