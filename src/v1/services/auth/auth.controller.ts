@@ -181,6 +181,7 @@ const logIn = async (req: any, res: any) => {
     if (!match) return clientResponse(res, 401, 'incorrect password')
 
     const token = asignNewToken(phone);
+    
     let checkForWallet = await walletModel.findOne({ userId: user?._id});
 
     if (!checkForWallet) {

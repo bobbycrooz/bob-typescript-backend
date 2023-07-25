@@ -61,7 +61,7 @@ const PrescriptionSchema = new mongoose.Schema({
     type: String,
     enum: ['approved', 'rejected', 'pending'],
     default: 'pending',
-    required: true
+    // required: true
   },
 
   approvedBy: {
