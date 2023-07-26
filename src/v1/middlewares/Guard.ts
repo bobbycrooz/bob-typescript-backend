@@ -19,7 +19,6 @@ async function authorize(req: Request, res: Response, next: NextFunction) {
 
     const { err, phone } = await getUserFromToken(token)
 
-    Logger.info('Authorization middleware is working')
 
     if (err) return clientResponse(res, 401, err)
 

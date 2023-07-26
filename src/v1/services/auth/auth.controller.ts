@@ -127,7 +127,7 @@ const registerOne = async (req: any, res: any) => {
       const newUserData = {
         phone: fmtPhone,
         password,
-        role: role || 'patient',
+        role: role || 'doctor',
         profileId: profile?._id,
         verified: true
       }
