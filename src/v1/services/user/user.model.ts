@@ -57,6 +57,8 @@ const practitionerProfileSchema = new mongoose.Schema({
       type: String
     },
 
+    imgUrl: String,
+
     languages: {
       type: [String],
       default: ['english']
@@ -101,7 +103,7 @@ const practitionerProfileSchema = new mongoose.Schema({
       default: 'free'
     },
     startDate: Date,
-    endDate:Date
+    endDate: Date
   },
   consultationFee: {
     type: Number,
@@ -137,7 +139,6 @@ const patientProfileSchema = new mongoose.Schema({
   personalInfo: {
     firstName: {
       type: String,
-      // required: true,
       set: (value: string) => value.toLowerCase()
     },
 
@@ -150,6 +151,8 @@ const patientProfileSchema = new mongoose.Schema({
     email: {
       type: String
     },
+
+    imgUrl: String,
 
     genotype: String,
     bloodGroup: String,
