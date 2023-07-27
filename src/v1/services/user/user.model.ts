@@ -157,7 +157,7 @@ const patientProfileSchema = new mongoose.Schema({
     genotype: String,
     bloodGroup: String,
     age: String,
-    wieight: String,
+    weight: String,
     height: String,
     allergies: [String]
   },
