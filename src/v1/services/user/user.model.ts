@@ -163,10 +163,22 @@ const patientProfileSchema = new mongoose.Schema({
   },
 
   location: {
-    country: String,
-    state: String,
-    street: String,
-    houseNumber: String
+    country: {
+      type: String,
+      default: ''
+    },
+    state: {
+      type: String,
+      default: ''
+    },
+    street: {
+      type: String,
+      default: ''
+    },
+    houseNumber: {
+      type: String,
+      default: ''
+    }
   },
 
   subscription: {
