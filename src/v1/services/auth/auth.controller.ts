@@ -227,4 +227,32 @@ const resetPassword = async (req: any, res: any) => {
   }
 }
 
-export { registerOne, logIn, resetPassword }
+
+const deleteAccount = async (req: any, res: any) =>
+{
+
+  const { phone } = req.body
+
+  try {
+    if (!phone) throw new Error('phone is required')
+    // @ts-ignore
+    const isExisting = await User.checkExistingUser(validateAndFormat(phone))
+
+    if (!isExisting) return clientResponse(res, 401, 'you need to register first you dont exist')
+
+    // const user = await userService.getOne({ phone })
+    const deletedUser = await User.findOneAndDelete(
+      { phone: validateAndFormat(phone) }
+    ).lean()
+
+    if (deletedUser) {
+
+      return clientResponse(res, 201, {  message: 'Account has been deleted successfully' })
+    }
+  } catch (error: any) {
+    Logger.error('${error.message}')
+
+    clientResponse(res, 400, { error: error.message, message: 'there was a problem deleting your account' })
+  }
+}
+export { registerOne, logIn, resetPassword, deleteAccount }
