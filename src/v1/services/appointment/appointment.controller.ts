@@ -5,10 +5,17 @@ import Services from '../../helpers/model.helper'
 import { clientResponse } from '../../helpers/response'
 import Logger from '../../libs/logger'
 import { appointmentValidationSchema } from '../../utils/validation/appointmentValidation'
-import { generateMeetingLink } from '../../helpers/googleMeet'
+import { generateMeetingLink } from "../../helpers/googleMeet";
+import calendly from "node-calendly";
 
 const userService = new Services(User)
 const appointmentService = new Services(AppointmentModel)
+
+
+
+
+
+
 
 const getAllGeneralPractitioners = async (req: any, res: any) => {
   try {
@@ -16,19 +23,20 @@ const getAllGeneralPractitioners = async (req: any, res: any) => {
 
     // let today =  "2023-07-15T08:23:07.008Z"
 
-    const users = await practitionerProfile.find()
-    const allDoctorsResult = users.map((user) => ({
-      firstName: user.personalInfo?.firstName,
-      lastName: user.personalInfo?.lastName,
-      bio: user.bio,
-      avaialableTime: user.availableDateAndTime,
-      avatar: user.personalInfo?.avatar,
-      ratings: user.rating,
-      consultationFee: user.consultationFee,
-      yearsOfExperience: user.yearsofExperience,
-      hospitalName: user.hospital,
-      noOfReviews: user.reviews.length
-    }))
+        const users = await practitionerProfile.find();
+        const allDoctorsResult = users.map((user) => ({
+          id: user.id,
+          firstName: user.personalInfo?.firstName,
+          lastName: user.personalInfo?.lastName,
+          bio: user.bio, 
+          avaialableTime: user.availableDateAndTime,
+          avatar: user.personalInfo?.avatar,
+          ratings: user.rating,
+          consultationFee: user.consultationFee,
+          yearsOfExperience: user.yearsofExperience,
+          hospitalName: user.hospital,
+          noOfReviews: user.reviews.length,
+        }));
 
     clientResponse(res, 200, {
       allDoctors: allDoctorsResult
@@ -135,29 +143,30 @@ const createAppointment = async (req: any, res: any) => {
 const getAllUserAppointments = async (req: any, res: any) => {
   const currentUser = req.user
 
-  try {
-    const appointment = await AppointmentModel.find({
-      $or: [
-        {
-          doctorId: currentUser._id
-        }
-      ]
-    }).populate({
-      path: 'patientId',
-      populate: {
-        path: 'profileId',
-        model: 'PatientProfile'
+    try {
+        const appointment = await AppointmentModel.find({
+            $or: [
+                {
+                  doctorId: currentUser._id
+                }
+            ]
+        })    
+        .populate({
+            path: "patientId",
+            populate: {
+                path: 'profileId',
+                model: 'PatientProfile'
+            }
+        })
+        clientResponse(res,200, {
+            appointment:appointment
+        })
+    }  catch (error: typeof Error | any) {
+        Logger.error(`${error.message}`)
+    
+        // return error
+        clientResponse(res, 400, error.message)
       }
-    })
-    clientResponse(res, 200, {
-      appointment: appointment
-    })
-  } catch (error: typeof Error | any) {
-    Logger.error(`${error.message}`)
-
-    // return error
-    clientResponse(res, 400, error.message)
-  }
 }
 
 const respondToAppointment = async (req: any, res: any) => {
@@ -196,6 +205,87 @@ const respondToAppointment = async (req: any, res: any) => {
     // return error
     clientResponse(res, 400, error.message)
   }
+}
+
+const getUserTotalAppointments = async(req:any, res:any) => {
+  const currentUser = req.user;
+
+  try {
+      const appointment = await AppointmentModel.find({
+          $or: [
+              {
+                patientId: currentUser._id
+              }
+          ]
+      })
+
+      const length = appointment.length;
+      clientResponse(res,200, {
+          appointment:length
+      })
+  }  catch (error: typeof Error | any) {
+      Logger.error(`${error.message}`)
+  
+      // return error
+      clientResponse(res, 400, error.message)
+    }
+}
+
+const getDoctorTotalAppointments = async(req:any, res:any) => {
+  const currentUser = req.user;
+
+  try {
+      const appointment = await AppointmentModel.find({
+          $or: [
+              {
+                doctorId: currentUser._id
+              }
+          ],
+      })
+
+      const length = appointment.length;
+      clientResponse(res,200, {
+          appointment:length
+      })
+  }  catch (error: typeof Error | any) {
+      Logger.error(`${error.message}`)
+  
+      // return error
+      clientResponse(res, 400, error.message)
+    }
+}
+
+
+const getUserUpcomingAppointments = async(req:any, res:any) => {
+ 
+  const currentUser = req.user;
+
+  try {
+      const appointment = await AppointmentModel.find({
+          $or: [
+              {
+                patientId: currentUser._id
+              }
+          ]
+      })    
+      .populate({
+          path: "doctorId",
+          populate: {
+              path: 'profileId',
+              model: 'PractitionerProfile'
+          }
+      });
+
+      const pendingAppointments = appointment.filter((appointment) => appointment.status === 'APPROVED' || appointment.status === 'PENDING');
+      clientResponse(res,200, {
+          appointment: pendingAppointments
+      })
+  }  catch (error: typeof Error | any) {
+      Logger.error(`${error.message}`)
+  
+      // return error
+      clientResponse(res, 400, error.message)
+    }
 }
 
 const rescheduleAppointment = async (req: any, res: any) => {
@@ -299,13 +389,6 @@ const rateAppointment = async (req: any, res: any) => {
   }
 }
 
-export {
-  getAllGeneralPractitioners,
-  getSpecialists,
-  getDoctorProfile,
-  createAppointment,
-  getAllUserAppointments,
-  respondToAppointment,
-  rateAppointment,
-  rescheduleAppointment
-}
+
+
+export { getAllGeneralPractitioners, getSpecialists, getDoctorProfile, createAppointment, getAllUserAppointments, respondToAppointment, rateAppointment,rescheduleAppointment, getUserTotalAppointments, getUserUpcomingAppointments, getDoctorTotalAppointments}
