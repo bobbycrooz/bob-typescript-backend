@@ -54,10 +54,14 @@ const practitionerProfileSchema = new mongoose.Schema({
     },
 
     email: {
-      type: String
+      type: String,
+      default: ''
     },
 
-    imgUrl: String,
+    imgUrl: {
+      type: String,
+      default: ''
+    },
 
     languages: {
       type: [String],
@@ -77,11 +81,13 @@ const practitionerProfileSchema = new mongoose.Schema({
     },
 
     licenseNumber: {
-      type: String
+      type: String,
+      default: ''
     },
 
     hospitalName: {
-      type: String
+      type: String,
+      default: ''
     }
   },
   bio: {
@@ -139,7 +145,8 @@ const patientProfileSchema = new mongoose.Schema({
   personalInfo: {
     firstName: {
       type: String,
-      set: (value: string) => value.toLowerCase()
+      set: (value: string) => value.toLowerCase(),
+      default: ''
     },
 
     lastName: {
@@ -149,16 +156,39 @@ const patientProfileSchema = new mongoose.Schema({
     },
 
     email: {
-      type: String
+      type: String,
+      default: ''
     },
 
-    imgUrl: String,
+    imgUrl: {
+      type: String,
+      default: ''
+    },
 
-    genotype: String,
-    bloodGroup: String,
-    age: String,
-    weight: String,
-    height: String,
+    genotype: {
+      type: String,
+      default: ''
+    },
+    bloodGroup: {
+      type: String,
+      default: ''
+    },
+    age: {
+      type: String,
+      default: ''
+    },
+    dob: {
+      type: String,
+      default: ''
+    },
+    weight: {
+      type: String,
+      default: ''
+    },
+    height: {
+      type: String,
+      default: ''
+    },
     allergies: [String]
   },
 
