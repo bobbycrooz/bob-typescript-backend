@@ -11,7 +11,6 @@ export const asignNewToken = (data: string | object) => {
 // get user from token
 export const getUserFromToken = async (token: string) =>
 {
-      console.log('jwt is runing');
       
   return jwt.verify(token, config.SECRET as string, (err, decode) => {
     if (err)

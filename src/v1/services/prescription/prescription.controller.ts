@@ -13,7 +13,7 @@ const createPrescription = async (req: any, res: any) => {
     // get user from request
     const currentUser = req.user
 
-    console.log(currentUser, 'current user')
+    // console.log(currentUser, 'current user')
 
     const isDoctor = currentUser.role === 'doctor'
 
@@ -56,7 +56,7 @@ const getPrescriptions = async (req: any, res: any) => {
     // get user from request
     const { name, phone } = req.query
 
-    console.log(name, phone, 'details froom qurery')
+    // console.log(name, phone, 'details froom qurery')
 
     let filterBy = {}
 
@@ -73,7 +73,7 @@ const getPrescriptions = async (req: any, res: any) => {
       }
     }
 
-    console.log(filterBy)
+    // console.log(filterBy)
     // create new prescription
     // const allprescriptionData = await prescriptionService.getByQuery(filterBy)
     const allprescriptionData = await PrescriptionModel.find(filterBy).populate({
@@ -128,7 +128,7 @@ const prescriptionHistory = async (req: any, res: any) => {
       })
       .lean()
 
-    console.log(allPrescribedPres, `selected prescription by doctor ${currentUser.username}`)
+    // console.log(allPrescribedPres, `selected prescription by doctor ${currentUser.username}`)
 
     // update the underReview field to cancel
     if (allPrescribedPres) return clientResponse(res, 201, allPrescribedPres)
@@ -373,7 +373,7 @@ const cancleSelectedPriscription = async (req: any, res: any) => {
       'underReview.by': currentUser._id
     })
 
-    console.log(selectedPrescriptionByDoctor, 'selected prescription by doctor ${currentUser.username}')
+    // console.log(selectedPrescriptionByDoctor, 'selected prescription by doctor ${currentUser.username}')
 
     // update the underReview field to cancel
     if (selectedPrescriptionByDoctor) {

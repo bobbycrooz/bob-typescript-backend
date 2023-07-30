@@ -17,7 +17,7 @@ export function validateAndFormat(phoneNumber: any) {
 
   const isValid = regex.test(String(phoneNumber))
 
-  console.log(isValid)
+  // console.log(isValid)
 
   if (isValid) {
     if (phoneNumber.startsWith('0')) {

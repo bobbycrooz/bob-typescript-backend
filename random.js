@@ -8,4 +8,4 @@ function generateRandomCode(length) {
 }
 
 
-console.log(generateRandomCode(6));
+// console.log(generateRandomCode(6));

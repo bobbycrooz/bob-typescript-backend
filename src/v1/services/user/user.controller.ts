@@ -68,7 +68,7 @@ const getProfileById = async (req: any, res: any) => {
       userProfile = await practitionerProfile.findById({ _id: user.profileId }).lean()
     }
 
-    console.log(userProfile)
+    // console.log(userProfile)
 
     if (!userProfile || userProfile == ('' as any)) throw new Error('user not found')
 
