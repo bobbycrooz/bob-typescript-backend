@@ -1,21 +1,18 @@
 import { Router } from 'express'
-import { profile, updateProfile, getProfileById, updateAvailability } from './user.controller'
+import { createUser, getUsers, fundWallet, sendMoney } from './user.controller'
 
 const router = Router()
 
-router.get('/', profile)
+router.post('/', createUser)
 
-router.patch('/', updateProfile)
+router.get('/', getUsers)
 
+router.patch('/fund', fundWallet)
 
-router.patch('/status/:isAvailable', updateAvailability)
-
-router.get('/:id', getProfileById)
-
-
+router.post('/send', sendMoney)
 
 export default {
-  baseUrl: '/profile',
+  baseUrl: '/user',
   router,
-  auth: true
+  auth: false
 }

@@ -8,217 +8,17 @@ const userSchema = new mongoose.Schema({
     set: (value: string) => value.toLowerCase()
   },
 
-  phone: {
-    type: String,
-    required: true
-  },
-
-  password: {
-    type: String,
-    // required: true,
-    set: (value: any) => {
-      const hash = bcrypt.hashSync(value, 8)
-      return hash
+  wallets: {
+    idOne: {
+      type: Schema.Types.ObjectId,
+      ref: 'TestWallet',
+      required: true
+    },
+    idTwo: {
+      type: Schema.Types.ObjectId,
+      ref: 'TestWallet',
+      required: false
     }
-  },
-
-  role: {
-    type: String,
-    required: true,
-    enum: ['patient', 'doctor', 'pharmacist']
-  },
-
-  verified: {
-    type: Boolean,
-    default: false
-  },
-
-  profileId: String
-})
-
-// patient profile schema
-const practitionerProfileSchema = new mongoose.Schema({
-  personalInfo: {
-    firstName: {
-      type: String,
-      // required: true,
-      set: (value: string) => value.toLowerCase()
-    },
-    avatar: {
-      type: String
-    },
-    lastName: {
-      type: String,
-      // required: true,
-      set: (value: string) => value.toLowerCase()
-    },
-
-    email: {
-      type: String,
-      default: ''
-    },
-
-    imgUrl: {
-      type: String,
-      default: ''
-    },
-
-    languages: {
-      type: [String],
-      default: ['english']
-    }
-  },
-
-  medicalInfo: {
-    specialty: {
-      type: String,
-      set: (value: string) => value.toLowerCase()
-    },
-
-    subSpecialty: {
-      type: String,
-      set: (value: string) => value.toLowerCase()
-    },
-
-    licenseNumber: {
-      type: String,
-      default: ''
-    },
-
-    hospitalName: {
-      type: String,
-      default: ''
-    }
-  },
-  bio: {
-    type: String,
-    default: 'I am a Doctor'
-  },
-  availableDateAndTime: {
-    type: Date,
-    default: Date.now()
-  },
-  isAvailable: {
-    type: Boolean,
-    default: false
-  },
-  subscription: {
-    plan: {
-      type: String,
-      enum: ['free', 'basic', 'premium'],
-      default: 'free'
-    },
-    startDate: Date,
-    endDate: Date
-  },
-  consultationFee: {
-    type: Number,
-    default: 1500
-  },
-  reviews: [
-    {
-      review: { type: String, required: true },
-      rating: { type: Number, required: true },
-      reviewFrom: { type: Schema.Types.ObjectId, required: true }
-    }
-  ],
-  yearsofExperience: {
-    type: Number,
-    default: 1
-  },
-  hospital: {
-    type: String,
-    default: 'No hospital yet'
-  },
-  rating: {
-    type: Number,
-    default: 0,
-    max: 5
-  },
-  noOfAppointments: {
-    type: Number,
-    default: 0
-  }
-})
-
-const patientProfileSchema = new mongoose.Schema({
-  personalInfo: {
-    firstName: {
-      type: String,
-      set: (value: string) => value.toLowerCase(),
-      default: ''
-    },
-
-    lastName: {
-      type: String,
-      // required: true,
-      set: (value: string) => value.toLowerCase()
-    },
-
-    email: {
-      type: String,
-      default: ''
-    },
-
-    imgUrl: {
-      type: String,
-      default: ''
-    },
-
-    genotype: {
-      type: String,
-      default: ''
-    },
-    bloodGroup: {
-      type: String,
-      default: ''
-    },
-    age: {
-      type: String,
-      default: ''
-    },
-    dob: {
-      type: String,
-      default: ''
-    },
-    weight: {
-      type: String,
-      default: ''
-    },
-    height: {
-      type: String,
-      default: ''
-    },
-    allergies: [String]
-  },
-
-  location: {
-    country: {
-      type: String,
-      default: ''
-    },
-    state: {
-      type: String,
-      default: ''
-    },
-    street: {
-      type: String,
-      default: ''
-    },
-    houseNumber: {
-      type: String,
-      default: ''
-    }
-  },
-
-  subscription: {
-    plan: {
-      type: String,
-      enum: ['free', 'basic', 'premium'],
-      default: 'free'
-    },
-    startDate: Date,
-    endDate: Date
   }
 })
 
@@ -248,14 +48,10 @@ userSchema.methods.comparePassword = async function (commingPassword: string) {
 }
 
 //method to remove password from json response
-userSchema.methods.toJSON = function() {
-  var obj = this.toObject();
-  delete obj.password;
-  return obj;
- }
+userSchema.methods.toJSON = function () {
+  var obj = this.toObject()
+  delete obj.password
+  return obj
+}
 
-export const patientProfile = mongoose.model('PatientProfile', patientProfileSchema)
-
-export const practitionerProfile = mongoose.model('PractitionerProfile', practitionerProfileSchema)
-
-export default mongoose.model('User', userSchema)
+export default mongoose.model('TestUser', userSchema)

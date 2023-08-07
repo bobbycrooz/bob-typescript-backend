@@ -1,44 +1,51 @@
 import User from '../user/user.model'
 import Services from '../../helpers/model.helper'
 import { clientResponse } from '../../helpers/response'
-import { asignNewToken } from '../../helpers/token'
 import { validateAndFormat } from '../../utils'
 import Logger from '../../libs/logger'
-import { patientProfile, practitionerProfile } from './user.model'
+import walletModel from '../wallet/wallet.model'
 
 const userService = new Services(User)
+const walletService = new Services(walletModel)
 
 // login
-const profile = async (req: any, res: any) => {
-  // const { phone, password } = req.body
+const createUser = async (req: any, res: any) => {
+  const { username } = req.body
 
   try {
-    // if (!phone || !password) throw new Error('phone and password are required')
+    if (!username) throw new Error('Name is required')
 
-    const currentUser = req.user
+    const isExisting = await userService.getOne({ username })
 
-    if (currentUser.profileId === '' || currentUser.profileId === null || !currentUser.profileId) {
-      return clientResponse(res, 400, {
-        message: `You need to update your profile first.`
-      })
+    if (isExisting) {
+      // return error
+      throw new Error('User already exists')
     }
 
-    // fetch user profile base on role
-    if (currentUser.role === 'patient') {
-      const profile = await patientProfile.findOne({ _id: currentUser.profileId }).lean()
+    // create new wallet
+    const newWallet = await walletService.create({
+      owner: username
+    })
 
-      if (!profile) throw new Error('Profile not found')
-
-      currentUser.profileId = profile
-    } else if (currentUser.role === 'doctor') {
-      const profile = await practitionerProfile.findOne({ _id: currentUser.profileId }).lean()
-
-      if (!profile) throw new Error('profile not found')
-
-      currentUser.profileId = profile
+    if (!newWallet) {
+      throw new Error("we couldn't create a wallet for this user")
     }
 
-    clientResponse(res, 201, currentUser)
+    const newUser = {
+      username,
+
+      wallets: {
+        idOne: newWallet._id
+      }
+    }
+
+    const saveUser = await userService.create(newUser)
+
+    if (saveUser) {
+      return clientResponse(res, 201, newUser)
+    }
+
+    throw new Error("we couldn't create a user")
   } catch (error: any) {
     Logger.error(`${error.message}`)
 
@@ -46,132 +53,38 @@ const profile = async (req: any, res: any) => {
   }
 }
 
-const getProfileById = async (req: any, res: any) => {
+const getUsers = async (req: any, res: any) => {
   // const { phone, password } = req.body
 
-  const { id } = req.params
-
   try {
-    // if (!phone || !password) throw new Error('phone and password are required')
+    const user = await User.find({}).populate('wallets.idOne').lean()
 
-    // const currentUser = req.user
+    if (user) return clientResponse(res, 201, user as any)
 
-    // const user = await userService.getById(id)
-
-    const user = await User.findById({ _id: id }).select('profileId role').lean()
-
-    let userProfile
-
-    if (user && user.role === 'patient') {
-      userProfile = await patientProfile.findById({ _id: user.profileId }).lean()
-    } else if (user && user.role === 'doctor') {
-      userProfile = await practitionerProfile.findById({ _id: user.profileId }).lean()
-    }
-
-    // console.log(userProfile)
-
-    if (!userProfile || userProfile == ('' as any)) throw new Error('user not found')
-
-    clientResponse(res, 201, userProfile as any)
+    throw new Error('There are no users')
   } catch (error: any) {
     Logger.error(`${error.message}`)
 
-    clientResponse(res, 400, { error: error.message, message: 'There was a problem getting the users profile.' })
+    clientResponse(res, 400, { error: error.message, message: 'There was a problem getting users' })
   }
 }
 
-const updateProfile = async (req: any, res: any) => {
+const fundWallet = async (req: any, res: any) => {
   try {
-    const data = req.body
+    const { username, amount } = req.body
 
-    // get user from request
-    const currentUser = req.user
+    if (amount < 100) throw new Error('Minimum amount to fund is 100')
 
-    // create a new user profile if it doesnt exist
-    if (currentUser.profileId === '' || currentUser.profileId === null || !currentUser.profileId) {
-      Logger.info('creating new profile as it doesnt exist')
-
-      if (currentUser.role === 'patient') {
-        const newProfile = await patientProfile.create(data)
-
-        // update user model to have profile id
-        await userService.update(currentUser._id, { $set: { profileId: newProfile._id } })
-
-        currentUser.profileId = newProfile._id
-      } else if (currentUser.role === 'doctor') {
-        const newProfile = await practitionerProfile.create(data)
-
-        // update user model to have profile id
-        await userService.update(currentUser._id, { $set: { profileId: newProfile._id } })
-
-        currentUser.profileId = newProfile._id
-      }
-    } else {
-      // update user profile, since it exist.
-      if (currentUser.role === 'patient') {
-        const updateProfile = await patientProfile.updateOne({ _id: currentUser.profileId }, data)
-
-        if (!updateProfile) throw new Error('profile not found')
-
-        currentUser.profileId = updateProfile
-      } else if (currentUser.role === 'doctor') {
-        const updateProfile = await practitionerProfile.updateOne({ _id: currentUser.profileId }, data)
-
-        if (!updateProfile) throw new Error('profile not found')
-
-        currentUser.profileId = updateProfile
-      }
-    }
-
-    return clientResponse(res, 201, 'Profile has been updated succesfully.')
-
-    // return response
-  } catch (error: typeof Error | any) {
-    Logger.error(`${error.message}`)
-
-    // return error
-    clientResponse(res, 400, error.message)
-  }
-}
-
-const updateAvailability = async (req: any, res: any) => {
-  try {
-    // get user from request
-    const currentUser = req.user
-
-    const currentStatus = req.params.isAvailable
-
-    if (!['available', 'unavailable'].includes(currentStatus)) {
-      return clientResponse(res, 400, {
-        message: `Status must be one of 'available' or 'unavailable'.`
-      })
-    }
-
-    if (currentUser.profileId === '' || currentUser.profileId === null || !currentUser.profileId) {
-      return clientResponse(res, 400, {
-        message: `You need to update your profile first.`
-      })
-    }
-
-    if (currentUser.role !== 'doctor') {
-      return clientResponse(res, 400, {
-        message: `Only practitional can change availabilty!`
-      })
-    }
-
-    const updated = await practitionerProfile.updateOne(
-      { _id: currentUser.profileId },
-      {
-        isAvailable: currentStatus === 'available' ? true : 'false'
-      },
+    const updateUserWallet = await walletModel.findOneAndUpdate(
+      { owner: username },
+      { 'balance.value': amount },
       { new: true }
-    )
+    ).lean()
 
-    if (updated) {
-      return clientResponse(res, 201, 'Status has been updated succesfully! ')
-    }
+    if (updateUserWallet) return clientResponse(res, 201, `wallet funded with ${amount}, ballance: ${updateUserWallet.balance?.value}`)
 
-    //  clientResponse(res, 201, '.')
+    clientResponse(res, 400, "something went wrong")
+
 
     // return response
   } catch (error: typeof Error | any) {
@@ -182,4 +95,55 @@ const updateAvailability = async (req: any, res: any) => {
   }
 }
 
-export { profile, updateProfile, getProfileById, updateAvailability }
+const sendMoney = async (req: any, res: any) => {
+  try {
+    const { username, amount, recipentName } = req.body
+
+    if (amount < 100) throw new Error('Minimum amount to fund is 100')
+
+    const getUsersBal = await User.findOne({ username }).populate('wallets.idOne').select('balance')
+
+    // @ts-ignore
+    console.log(getUsersBal.wallets?.idOne?.balance.value, amount)
+
+    if (!getUsersBal) throw new Error('User does not exist')
+
+    // @ts-ignore
+    if (getUsersBal.wallets?.idOne?.balance.value < amount) {
+      throw new Error('Insuficient funds in wallet')
+    } else {
+      // finde recipent wallet
+      const updateUserWallet = await walletModel
+        .findOneAndUpdate(
+          { owner: recipentName },
+          {
+            $inc: { 'balance.value': amount }
+          },
+          { new: true }
+        )
+        .lean()
+
+      // deduct
+      const deductUserWallet = await walletModel
+        .findOneAndUpdate(
+          { owner: username },
+          {
+            $inc: { 'balance.value': -amount }
+          },
+          { new: true }
+        )
+        .lean()
+
+
+      if (updateUserWallet) return clientResponse(res, 201, `Sent ${amount} NGN to ${recipentName}`)
+
+      throw new Error('No recipent with that name')
+    }
+  } catch (error: typeof Error | any) {
+    Logger.error(`${error.message}`)
+
+    // return error
+    clientResponse(res, 400, error.message)
+  }
+}
+export { createUser, getUsers, fundWallet, sendMoney }
