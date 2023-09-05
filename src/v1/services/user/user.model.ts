@@ -1,4 +1,4 @@
-import bcrypt from 'bcrypt'
+// import bcrypt from 'bcrypt'
 import mongoose, { Schema } from 'mongoose'
 
 const userSchema = new mongoose.Schema({
@@ -14,6 +14,7 @@ const userSchema = new mongoose.Schema({
       ref: 'TestWallet',
       required: true
     },
+
     idTwo: {
       type: Schema.Types.ObjectId,
       ref: 'TestWallet',
@@ -32,20 +33,20 @@ userSchema.statics.checkExistingUser = async function (phone: string) {
 }
 
 // document instance methods to asign function to each documenet
-userSchema.methods.comparePassword = async function (commingPassword: string) {
-  // use bcrypt to compare incoming password against saved password
-  const currentPassword = this.password
+// userSchema.methods.comparePassword = async function (commingPassword: string) {
+//   // use bcrypt to compare incoming password against saved password
+//   const currentPassword = this.password
 
-  return new Promise((resolve, reject) => {
-    bcrypt.compare(commingPassword, currentPassword, (err: any, same: any) => {
-      if (err) {
-        return reject(err)
-      }
+//   return new Promise((resolve, reject) => {
+//     bcrypt.compare(commingPassword, currentPassword, (err: any, same: any) => {
+//       if (err) {
+//         return reject(err)
+//       }
 
-      resolve(same)
-    })
-  })
-}
+//       resolve(same)
+//     })
+//   })
+// }
 
 //method to remove password from json response
 userSchema.methods.toJSON = function () {
