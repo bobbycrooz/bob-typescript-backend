@@ -19,7 +19,11 @@ const createUser = async (req: any, res: any) => {
     if (!password) throw new Error('Password is required')
 
     // const isExisting = await userService.getOne({ username })
-    const isExisting = await User.findOne({ $or: [{ username }, { email }] })
+    const isExisting = await User.findOne({ $or: [{ username }, { email }]}).populate({
+      path: 'connections',  
+      select: 'username email profileImage'
+    })
+    
 
     if (isExisting) {
       return clientResponse(res, 201, {
@@ -57,9 +61,9 @@ const createUser = async (req: any, res: any) => {
 const editProfile = async (req: any, res: any) => {
   
   try {
-    const { email, firstName, bio, profileImage } = req.body
+    const { email, fullName, bio, profileImage } = req.body
     // const isExisting = await userService.getOne({ username })
-    const isExisting = await User.findOneAndUpdate({ email }, { firstName, bio, profileImage }, { new: true })
+    const isExisting = await User.findOneAndUpdate({ email }, { fullName, bio, profileImage }, { new: true })
 
     if (isExisting) {
       return clientResponse(res, 201, {
@@ -84,7 +88,10 @@ const logIn = async (req: any, res: any) => {
     if (!password) throw new Error('Password is required')
 
     // const isExisting = await userService.getOne({ username })
-    const isExisting = await User.findOne({ email }).populate('connections').lean()
+    const isExisting = await User.findOne({ email }).populate({
+      path: 'connections',
+      select: 'username email profileImage'
+    })
 
     if (!isExisting) {
       return clientResponse(res, 404, {
@@ -126,10 +133,19 @@ const getUsers = async (req: any, res: any) => {
   }
 
   try {
-    const user = await User.find(filterBy).populate('connections').lean().exec()
+    const user = await User.find(filterBy)
+      .populate({
+        path: 'connections',
+        select: 'username email profileImage'
+      })
+      .lean()
     // const user = await User.find(filterBy)
+    
 
-    if (user) return clientResponse(res, 201, user as any)
+    if (user) return clientResponse(res, 201, {
+      message: 'Users found!',
+      user: user
+    } )
 
     throw new Error('There are no users')
   } catch (error: any) {
