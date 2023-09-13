@@ -4,45 +4,46 @@ import { clientResponse } from '../../helpers/response'
 import { validateAndFormat } from '../../utils'
 import Logger from '../../libs/logger'
 import walletModel from '../wallet/wallet.model'
+import argon2 from 'argon2'
 
 const userService = new Services(User)
 const walletService = new Services(walletModel)
 
 // login
 const createUser = async (req: any, res: any) => {
-  const { username } = req.body
+  const { username, email, password } = req.body
 
   try {
     if (!username) throw new Error('Name is required')
+    if (!email) throw new Error('Email is required')
+    if (!password) throw new Error('Password is required')
 
-    const isExisting = await userService.getOne({ username })
+    // const isExisting = await userService.getOne({ username })
+    const isExisting = await User.findOne({ $or: [{ username }, { email }] })
 
     if (isExisting) {
-      // return error
-      throw new Error('User already exists')
+      return clientResponse(res, 201, {
+        message: 'User already registered!',
+        user: isExisting
+      })
     }
 
-    // create new wallet
-    const newWallet = await walletService.create({
-      owner: username
-    })
-
-    if (!newWallet) {
-      throw new Error("we couldn't create a wallet for this user")
-    }
+    // hash password
+    const hashedPassword = await argon2.hash(password)
 
     const newUser = {
       username,
-
-      wallets: {
-        idOne: newWallet._id
-      }
+      email,
+      password: hashedPassword
     }
 
     const saveUser = await userService.create(newUser)
 
     if (saveUser) {
-      return clientResponse(res, 201, newUser)
+      return clientResponse(res, 201, {
+        message: 'Account created!',
+        user: saveUser
+      })
     }
 
     throw new Error("we couldn't create a user")
@@ -53,11 +54,80 @@ const createUser = async (req: any, res: any) => {
   }
 }
 
-const getUsers = async (req: any, res: any) => {
-  // const { phone, password } = req.body
+const editProfile = async (req: any, res: any) => {
+  
+  try {
+    const { email, firstName, bio, profileImage } = req.body
+    // const isExisting = await userService.getOne({ username })
+    const isExisting = await User.findOneAndUpdate({ email }, { firstName, bio, profileImage }, { new: true })
+
+    if (isExisting) {
+      return clientResponse(res, 201, {
+        message: 'Profile edited!',
+        user: isExisting
+      })
+    }
+
+    throw new Error("we couldn't create a user")
+  } catch (error: any) {
+    Logger.error(`${error.message}`)
+
+    clientResponse(res, 400, { error: error.message, message: 'there was a problem retrieving your profile' })
+  }
+}
+
+const logIn = async (req: any, res: any) => {
+  const { email, password } = req.body
 
   try {
-    const user = await User.find({}).populate('wallets.idOne').lean()
+    if (!email) throw new Error('Email is required')
+    if (!password) throw new Error('Password is required')
+
+    // const isExisting = await userService.getOne({ username })
+    const isExisting = await User.findOne({ email }).populate('connections').lean()
+
+    if (!isExisting) {
+      return clientResponse(res, 404, {
+        message: 'No account found for this user!!'
+      })
+    }
+
+    console.log(isExisting, 'from the log in ')
+
+    // compare password
+
+    const match = await argon2.verify(isExisting.password, password)
+
+    // @ts-ignore
+    if (match) {
+      return clientResponse(res, 200, {
+        message: 'Log in successfull!',
+        user: isExisting
+      })
+    }
+
+    throw new Error("we couldn't log you in")
+  } catch (error: any) {
+    Logger.error(`${error.message}`)
+
+    clientResponse(res, 400, { error: error.message, message: 'there was a problem retrieving your profile' })
+  }
+}
+
+const getUsers = async (req: any, res: any) => {
+  const { id } = req.query
+
+  let filterBy = {}
+
+  if (id) {
+    filterBy = {
+      _id: id
+    }
+  }
+
+  try {
+    const user = await User.find(filterBy).populate('connections').lean().exec()
+    // const user = await User.find(filterBy)
 
     if (user) return clientResponse(res, 201, user as any)
 
@@ -69,81 +139,34 @@ const getUsers = async (req: any, res: any) => {
   }
 }
 
-const fundWallet = async (req: any, res: any) => {
+const connetToUser = async (req: any, res: any) => {
+  const { myId, peerId } = req.body
+
   try {
-    const { username, amount } = req.body
+    const addMeToUserList = await User.findOneAndUpdate(
+      { _id: peerId },
+      { $push: { connections: myId } },
+      { new: !true }
+    )
 
-    if (amount < 100) throw new Error('Minimum amount to fund is 100')
-
-    const updateUserWallet = await walletModel.findOneAndUpdate(
-      { owner: username },
-      { 'balance.value': amount },
+    const addUserToMyList = await User.findOneAndUpdate(
+      { _id: myId },
+      { $push: { connections: peerId } },
       { new: true }
-    ).lean()
+    )
 
-    if (updateUserWallet) return clientResponse(res, 201, `wallet funded with ${amount}, ballance: ${updateUserWallet.balance?.value}`)
-
-    clientResponse(res, 400, "something went wrong")
-
-
-    // return response
-  } catch (error: typeof Error | any) {
-    Logger.error(`${error.message}`)
-
-    // return error
-    clientResponse(res, 400, error.message)
-  }
-}
-
-const sendMoney = async (req: any, res: any) => {
-  try {
-    const { username, amount, recipentName } = req.body
-
-    if (amount < 100) throw new Error('Minimum amount to fund is 100')
-
-    const getUsersBal = await User.findOne({ username }).populate('wallets.idOne').select('balance')
-
-    // @ts-ignore
-    console.log(getUsersBal.wallets?.idOne?.balance.value, amount)
-
-    if (!getUsersBal) throw new Error('User does not exist')
-
-    // @ts-ignore
-    if (getUsersBal.wallets?.idOne?.balance.value < amount) {
-      throw new Error('Insuficient funds in wallet')
-    } else {
-      // finde recipent wallet
-      const updateUserWallet = await walletModel
-        .findOneAndUpdate(
-          { owner: recipentName },
-          {
-            $inc: { 'balance.value': amount }
-          },
-          { new: true }
-        )
-        .lean()
-
-      // deduct
-      const deductUserWallet = await walletModel
-        .findOneAndUpdate(
-          { owner: username },
-          {
-            $inc: { 'balance.value': -amount }
-          },
-          { new: true }
-        )
-        .lean()
-
-
-      if (updateUserWallet) return clientResponse(res, 201, `Sent ${amount} NGN to ${recipentName}`)
-
-      throw new Error('No recipent with that name')
+    if (addMeToUserList && addUserToMyList) {
+      return clientResponse(res, 201, {
+        message: 'Connected!',
+        user: addUserToMyList
+      })
     }
-  } catch (error: typeof Error | any) {
+
+    throw new Error('There are no users')
+  } catch (error: any) {
     Logger.error(`${error.message}`)
 
-    // return error
-    clientResponse(res, 400, error.message)
+    clientResponse(res, 400, { error: error.message, message: 'There was a problem getting users' })
   }
 }
-export { createUser, getUsers, fundWallet, sendMoney }
+export { createUser, getUsers, logIn, connetToUser, editProfile }

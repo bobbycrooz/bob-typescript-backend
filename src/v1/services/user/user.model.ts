@@ -5,22 +5,47 @@ const userSchema = new mongoose.Schema({
   username: {
     type: String,
     // required: true,
-    set: (value: string) => value.toLowerCase()
+    set: (value: string) => value.toLowerCase(),
+    default: 'user1'
   },
 
-  wallets: {
-    idOne: {
-      type: Schema.Types.ObjectId,
-      ref: 'TestWallet',
-      required: true
-    },
+  email: {
+    type: String,
+    required: true,
+    set: (value: string) => value.toLowerCase(),
+    default: ''
+  },
 
-    idTwo: {
-      type: Schema.Types.ObjectId,
-      ref: 'TestWallet',
-      required: false
-    }
-  }
+  password: {
+    type: String,
+    // required: true,
+    default: ''
+  },
+
+  fullName: {
+    type: String,
+    // required: true,
+    default: ''
+  },
+  bio: {
+    type: String,
+    // required: true,
+    default: ''
+  },
+  connections:  [
+      {
+        type: Schema.Types.ObjectId,
+        ref: 'AbbeyUser'
+      }
+    ]
+  ,
+
+  profileImage: {
+    type: String,
+    default: ''
+  },
+
+  
 })
 
 // model function static
@@ -55,4 +80,4 @@ userSchema.methods.toJSON = function () {
   return obj
 }
 
-export default mongoose.model('TestUser', userSchema)
+export default mongoose.model('AbbeyUser', userSchema)
